@@ -1,0 +1,95 @@
+<div
+  class="min-h-screen bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500"
+>
+  <!-- Top bar -->
+  <div class="flex items-center justify-between px-6 py-4 text-white">
+    <button
+      (click)="goBack()"
+      class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full text-sm font-medium transition"
+    >
+      ← Back to Swiping
+    </button>
+    <h1 class="text-xl font-bold">My Matches</h1>
+    <div class="w-24"></div>
+  </div>
+
+  <div class="px-4 pb-8">
+    <!-- Loading -->
+    @if (loading()) {
+    <div class="bg-white/90 rounded-2xl p-8 text-center max-w-sm mx-auto">
+      <div
+        class="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"
+      ></div>
+      <p class="text-gray-700">Loading matches...</p>
+    </div>
+    }
+
+    <!-- Error -->
+    @if (error()) {
+    <div class="bg-white rounded-2xl p-6 max-w-sm mx-auto text-center">
+      <p class="text-red-600 mb-4">{{ error() }}</p>
+      <button
+        (click)="loadMatches()"
+        class="bg-pink-500 text-white px-6 py-2 rounded-lg hover:bg-pink-600"
+      >
+        Try again
+      </button>
+    </div>
+    }
+
+    <!-- Empty state -->
+    @if (!loading() && !error() && matches().length === 0) {
+    <div class="bg-white rounded-2xl p-8 max-w-sm mx-auto text-center">
+      <div class="text-6xl mb-4">💔</div>
+      <h2 class="text-xl font-bold text-gray-800 mb-2">No matches yet</h2>
+      <p class="text-gray-500 mb-4">Keep swiping to find your perfect match.</p>
+      <button
+        (click)="goBack()"
+        class="bg-pink-500 text-white px-6 py-2 rounded-lg hover:bg-pink-600"
+      >
+        Start Swiping
+      </button>
+    </div>
+    }
+
+    <!-- Matches list -->
+    @if (!loading() && !error() && matches().length > 0) {
+    <div class="max-w-sm mx-auto space-y-3">
+      @for (match of matches(); track match.matchId) {
+      <div
+        (click)="openChat(match.matchId)"
+        class="bg-white rounded-2xl p-4 shadow-lg flex items-center gap-4 cursor-pointer hover:shadow-xl hover:scale-[1.02] transition"
+      >
+        <!-- Avatar -->
+        <div
+          class="w-14 h-14 rounded-full bg-gradient-to-br from-pink-400 to-orange-400 flex items-center justify-center text-white text-xl font-bold flex-shrink-0 overflow-hidden"
+        >
+          @if (match.otherUserProfilePicture) {
+          <img
+            [src]="match.otherUserProfilePicture"
+            class="w-full h-full object-cover"
+            [alt]="match.otherUserName"
+          />
+          } @else {
+          {{ match.otherUserName.charAt(0) }}
+          }
+        </div>
+
+        <!-- Name + role -->
+        <div class="flex-1 min-w-0">
+          <h3 class="font-semibold text-gray-800 truncate">
+            {{ match.otherUserName }}
+          </h3>
+          <p class="text-sm text-gray-500 truncate">
+            {{ match.otherUserRole }}
+          </p>
+        </div>
+
+        <!-- Chat icon -->
+        <div class="text-pink-500 text-2xl flex-shrink-0">💬</div>
+      </div>
+      }
+    </div>
+    }
+  </div>
+</div>

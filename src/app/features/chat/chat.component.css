@@ -1,0 +1,11 @@
+/* Empty - using Tailwind */
+
+/* Smooth scrollbar */
+#messages-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+#messages-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}

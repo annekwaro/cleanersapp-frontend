@@ -1,0 +1,17 @@
+.animate-bounce-in {
+  animation: bounceIn 0.4s ease-out;
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
