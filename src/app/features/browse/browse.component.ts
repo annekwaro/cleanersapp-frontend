@@ -42,8 +42,8 @@ const SERVICE_ICONS: [RegExp, string][] = [
 const MODE_KEY = 'cleanmatch_browse_mode';
 
 /**
- * Home for guests and homeowners: search, categories, cleaner cards — and a
- * swipe mode for anyone who'd rather match Tinder-style.
+ * Home for guests and homeowners. Opens on the swipe deck; a list view with
+ * search, categories and cleaner cards is one tap away.
  */
 @Component({
   selector: 'app-browse',
@@ -293,9 +293,10 @@ export class BrowseComponent implements OnInit {
 
   private loadMode(): Mode {
     try {
-      return localStorage.getItem(MODE_KEY) === 'swipe' ? 'swipe' : 'browse';
+      // Swipe is the first thing people see; the list is one tap away and remembered
+      return localStorage.getItem(MODE_KEY) === 'browse' ? 'browse' : 'swipe';
     } catch {
-      return 'browse';
+      return 'swipe';
     }
   }
 }

@@ -19,53 +19,61 @@
 </ng-template>
 
 <div class="mx-auto max-w-5xl">
-  <!-- Heading + search -->
-  <section class="pt-1">
-    <h1 class="text-[1.9rem] font-extrabold leading-[1.1] tracking-tight sm:text-4xl">
-      @if (mode() === 'swipe') {
-        Swipe to <span class="text-brand-600">match</span>
-      } @else {
-        Find a cleaner<br class="sm:hidden" /> you'll <span class="text-brand-600">love</span>
-      }
-    </h1>
-    @if (!signedIn() && mode() === 'browse') {
-      <p class="mt-1.5 text-sm text-muted">Free to browse. No download. Request a time in a minute.</p>
+  @if (mode() === 'swipe') {
+    <!-- Swipe first: a compact header so the cards get the screen -->
+    <section class="flex items-center justify-between gap-3 pt-1">
+      <div class="min-w-0">
+        <h1 class="text-[1.65rem] font-extrabold leading-tight tracking-tight">Swipe to <span class="text-brand-600">match</span></h1>
+        <p class="text-sm text-muted">Right to like · left to pass · tap for details</p>
+      </div>
+      <button type="button" (click)="setMode('browse')"
+        class="btn btn-ghost btn-sm shrink-0 !border-transparent shadow-[var(--shadow-card)]" aria-label="Show as list">
+        <app-icon name="grid" [size]="16" /> List
+      </button>
+    </section>
+    @if (categories().length > 1) {
+      <div class="scroll-x -mx-4 mt-3 flex gap-2 px-4 sm:mx-0 sm:px-0" role="group" aria-label="Services">
+        @for (c of categories(); track c.name) {
+          <button type="button" class="chip chip-light shrink-0 !py-2" [class.chip-on]="category() === c.name"
+            [attr.aria-pressed]="category() === c.name" (click)="category.set(c.name)">
+            <app-icon [name]="c.icon" [size]="15" /> {{ c.name }}
+          </button>
+        }
+      </div>
     }
-
-    <div class="mt-4 flex gap-2.5">
-      @if (mode() === 'browse') {
+  } @else {
+    <!-- Heading + search -->
+    <section class="pt-1">
+      <h1 class="text-[1.9rem] font-extrabold leading-[1.1] tracking-tight sm:text-4xl">
+        Find a cleaner<br class="sm:hidden" /> you'll <span class="text-brand-600">love</span>
+      </h1>
+      <div class="mt-4 flex gap-2.5">
         <label class="relative flex-1">
           <span class="sr-only">Search cleaners</span>
           <app-icon name="search" [size]="20" class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
           <input class="field !h-12 !rounded-full !border-transparent !pl-12 shadow-[var(--shadow-card)]" type="search"
             placeholder="Search name, area or service" [ngModel]="query()" (ngModelChange)="query.set($event)" />
         </label>
-      } @else {
-        <button type="button" class="btn btn-ghost !h-12 flex-1 !justify-start !border-transparent shadow-[var(--shadow-card)]" (click)="setMode('browse')">
-          <app-icon name="back" [size]="18" /> Back to browsing
+        <button type="button" (click)="setMode('swipe')" aria-label="Swipe mode"
+          class="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white text-coal-900 shadow-[var(--shadow-card)] transition">
+          <app-icon name="cards" [size]="20" />
         </button>
-      }
-      <button type="button" (click)="setMode(mode() === 'browse' ? 'swipe' : 'browse')"
-        class="grid h-12 w-12 shrink-0 place-items-center rounded-full shadow-[var(--shadow-card)] transition"
-        [class]="mode() === 'swipe' ? 'bg-brand-600 text-white' : 'bg-white text-coal-900'"
-        [attr.aria-label]="mode() === 'swipe' ? 'Show as list' : 'Swipe mode'" [attr.aria-pressed]="mode() === 'swipe'">
-        <app-icon [name]="mode() === 'swipe' ? 'grid' : 'cards'" [size]="20" />
-      </button>
-    </div>
-  </section>
+      </div>
+    </section>
 
-  <!-- Categories -->
-  @if (categories().length > 1) {
-    <div class="scroll-x -mx-4 mt-5 flex gap-2.5 px-4 sm:mx-0 sm:px-0" role="group" aria-label="Services">
-      @for (c of categories(); track c.name) {
-        <button type="button" (click)="category.set(c.name)" [attr.aria-pressed]="category() === c.name"
-          class="flex w-[5.25rem] shrink-0 flex-col items-center gap-1.5 rounded-[1.4rem] px-1.5 py-3 text-center transition"
-          [class]="category() === c.name ? 'bg-brand-600 text-white shadow-[0_10px_20px_-10px_rgb(124_92_224/.9)]' : 'bg-white text-coal-800 shadow-[var(--shadow-card)]'">
-          <app-icon [name]="c.icon" [size]="24" />
-          <span class="line-clamp-2 min-h-[2em] w-full text-[0.7rem] font-semibold leading-tight">{{ c.name }}</span>
-        </button>
-      }
-    </div>
+    <!-- Categories -->
+    @if (categories().length > 1) {
+      <div class="scroll-x -mx-4 mt-5 flex gap-2.5 px-4 sm:mx-0 sm:px-0" role="group" aria-label="Services">
+        @for (c of categories(); track c.name) {
+          <button type="button" (click)="category.set(c.name)" [attr.aria-pressed]="category() === c.name"
+            class="flex w-[5.25rem] shrink-0 flex-col items-center gap-1.5 rounded-[1.4rem] px-1.5 py-3 text-center transition"
+            [class]="category() === c.name ? 'bg-brand-600 text-white shadow-[0_10px_20px_-10px_rgb(124_92_224/.9)]' : 'bg-white text-coal-800 shadow-[var(--shadow-card)]'">
+            <app-icon [name]="c.icon" [size]="24" />
+            <span class="line-clamp-2 min-h-[2em] w-full text-[0.7rem] font-semibold leading-tight">{{ c.name }}</span>
+          </button>
+        }
+      </div>
+    }
   }
 
   @if (!signedIn() && guestRequest.pending(); as pr) {
@@ -197,7 +205,7 @@
     }
   } @else {
     <!-- Swipe mode -->
-    <section class="mt-5" aria-label="Swipe through cleaners">
+    <section class="mt-4" aria-label="Swipe through cleaners">
       @if (deckLoading()) {
         <div class="mx-auto grid aspect-[3/4.1] w-full max-w-[24rem] place-items-center rounded-[2rem] bg-white/70">
           <div class="text-center">
@@ -213,8 +221,10 @@
             <button class="font-semibold text-brand-700 underline-offset-2 hover:underline" (click)="askToSaveLikes()">
               {{ guestLikes.likes().length }} liked — sign up to let them know
             </button>
+          } @else if (!signedIn()) {
+            Free, no download — sign up only when you want to send something
           } @else {
-            Drag the card, or tap <app-icon name="calendar-plus" [size]="14" class="align-[-2px]" /> to request a time
+            Tap <app-icon name="calendar-plus" [size]="14" class="align-[-2px]" /> on a card to request a time
           }
         </p>
       } @else {
