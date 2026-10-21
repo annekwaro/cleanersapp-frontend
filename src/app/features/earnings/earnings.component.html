@@ -1,0 +1,138 @@
+<div class="mx-auto max-w-3xl">
+  <h1 class="font-display text-3xl font-semibold">Earnings</h1>
+  <p class="text-sm text-muted">What you've made from completed CleanMatch jobs.</p>
+
+  @if (!store.loaded()) {
+    <div class="grid place-items-center py-20"><div class="spinner"></div></div>
+  } @else if (store.error()) {
+    <div class="card mt-6 p-6 text-center text-sm text-clay-500">{{ store.error() }}</div>
+  } @else {
+    <!-- Hero -->
+    <section class="mt-5 overflow-hidden rounded-[2rem] bg-forest-900 p-6 text-cream-50 sm:p-8">
+      <p class="eyebrow !text-sage-300">Earned in {{ stats().monthName }}</p>
+      <p class="mt-1 font-display text-5xl font-semibold sm:text-6xl">{{ money(stats().month) }}</p>
+      <p class="mt-2 flex items-center gap-1.5 text-sm text-cream-50/70">
+        @if (monthDelta() !== null) {
+          <app-icon name="trend" [size]="16" [class]="monthDelta()! >= 0 ? 'text-sage-300' : 'text-clay-100 -scale-y-100'" />
+          {{ monthDelta()! >= 0 ? '+' : '' }}{{ monthDelta() }}% vs last month ({{ money(stats().lastMonth) }})
+        } @else {
+          Mark jobs as done after each clean to track your income here.
+        }
+      </p>
+      <div class="mt-6 grid grid-cols-2 gap-3">
+        <div class="rounded-2xl bg-forest-800 p-4">
+          <p class="text-xs text-cream-50/60">Coming up · confirmed</p>
+          <p class="mt-1 font-display text-2xl font-semibold">{{ money(stats().upcoming) }}</p>
+          <p class="text-xs text-cream-50/60">{{ stats().upcomingJobs }} job{{ stats().upcomingJobs === 1 ? '' : 's' }}</p>
+        </div>
+        <div class="rounded-2xl bg-forest-800 p-4">
+          <p class="text-xs text-cream-50/60">Waiting on a reply</p>
+          <p class="mt-1 font-display text-2xl font-semibold">{{ money(stats().pending) }}</p>
+          <a routerLink="/app/schedule" class="text-xs font-semibold text-sage-300 hover:underline">See requests →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stat tiles -->
+    <section class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      @for (t of [
+        { label: 'This week', value: money(stats().week) },
+        { label: 'All time', value: money(stats().allTime) },
+        { label: 'Jobs done', value: stats().jobs + ' · ' + stats().hours + 'h' },
+        { label: 'Rating', value: rating() ? rating()!.toFixed(1) + ' ★' : '—' }
+      ]; track t.label) {
+        <div class="card p-4">
+          <p class="text-xs font-semibold text-muted">{{ t.label }}</p>
+          <p class="mt-1 font-display text-2xl font-semibold">{{ t.value }}</p>
+        </div>
+      }
+    </section>
+
+    <!-- Weekly bars -->
+    <section class="card mt-4 p-5">
+      <div class="flex items-baseline justify-between">
+        <h2 class="font-semibold">Weekly earnings</h2>
+        <p class="text-xs text-muted">Last 8 weeks</p>
+      </div>
+
+      @if (hasHistory()) {
+        <div class="relative mt-6" (mouseleave)="hovered.set(null)">
+          <!-- baseline grid -->
+          <div class="pointer-events-none absolute inset-x-0 bottom-6 top-0 flex flex-col justify-between">
+            <span class="border-t border-dashed border-line"></span>
+            <span class="border-t border-dashed border-line"></span>
+            <span class="border-t border-line"></span>
+          </div>
+          <div class="relative flex h-48 items-end gap-[2px]" role="img" aria-label="Bar chart of weekly earnings for the last 8 weeks">
+            @for (w of weeks(); track w.label; let i = $index) {
+              <button type="button" class="group relative flex h-full flex-1 flex-col items-center justify-end focus:outline-none"
+                (mouseenter)="hovered.set(i)" (focus)="hovered.set(i)" (blur)="hovered.set(null)"
+                [attr.aria-label]="w.range + ': ' + money(w.amount) + ', ' + w.jobs + ' jobs'">
+                @if (w.current && w.amount && hovered() === null) {
+                  <span class="mb-1 text-xs font-bold text-forest-900">{{ money(w.amount) }}</span>
+                }
+                <span class="block w-full max-w-10 rounded-t-[4px] transition-colors"
+                  [style.height.%]="barHeight(w.amount)"
+                  [class]="hovered() === i ? 'bg-sage-700' : w.current ? 'bg-sage-600' : 'bg-sage-300'"></span>
+                @if (hovered() === i) {
+                  <span class="absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2 whitespace-nowrap rounded-xl bg-forest-900 px-3 py-2 text-left text-xs text-cream-50 shadow-lg">
+                    <span class="block text-cream-50/60">{{ w.range }}</span>
+                    <span class="block font-bold">{{ money(w.amount) }} · {{ w.jobs }} job{{ w.jobs === 1 ? '' : 's' }}</span>
+                  </span>
+                }
+              </button>
+            }
+          </div>
+          <div class="mt-2 flex gap-[2px]">
+            @for (w of weeks(); track w.label) {
+              <span class="flex-1 truncate text-center text-[0.65rem] text-muted" [class.font-bold]="w.current">{{ w.label }}</span>
+            }
+          </div>
+          <table class="sr-only">
+            <caption>Weekly earnings</caption>
+            <tr><th>Week</th><th>Earned</th><th>Jobs</th></tr>
+            @for (w of weeks(); track w.label) { <tr><td>{{ w.range }}</td><td>{{ money(w.amount) }}</td><td>{{ w.jobs }}</td></tr> }
+          </table>
+        </div>
+      } @else {
+        <div class="mt-4 rounded-2xl bg-cream-100 p-6 text-center text-sm text-muted">
+          Your weekly chart appears after your first completed job.
+        </div>
+      }
+    </section>
+
+    <!-- Recent jobs -->
+    <section class="mt-4">
+      <h2 class="mb-3 font-semibold">Recent jobs</h2>
+      @if (recent().length) {
+        <ul class="card divide-y divide-line">
+          @for (b of recent(); track b.id) {
+            <li class="flex items-center gap-3 p-4">
+              <app-avatar [name]="b.otherUserName" [src]="b.otherUserProfilePicture" [seed]="b.otherUserId" [size]="40" />
+              <div class="min-w-0 flex-1">
+                <p class="truncate font-semibold">{{ b.otherUserName }}</p>
+                <p class="text-xs text-muted">{{ toDate(b.startAt) | date: 'EEE d MMM' }} · {{ b.durationHours }}h
+                  @if (b.rating) { · {{ b.rating }}★ }
+                </p>
+              </div>
+              <p class="font-display text-lg font-semibold">{{ money(b.totalAmount) }}</p>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="rounded-2xl bg-white/60 p-4 text-sm text-muted">No completed jobs yet. After a clean, open it in your schedule and tap <strong>Mark as done</strong>.</p>
+      }
+    </section>
+
+    <section class="mt-6 grid gap-3 sm:grid-cols-2">
+      <div class="rounded-3xl bg-white/60 p-5 text-sm">
+        <p class="font-semibold">Reliability</p>
+        <p class="mt-1 text-muted">You cancelled <strong class="text-forest-900">{{ stats().cancelRate }}%</strong> of confirmed jobs. Under 5% keeps clients coming back.</p>
+      </div>
+      <div class="rounded-3xl bg-white/60 p-5 text-sm">
+        <p class="font-semibold">Getting paid</p>
+        <p class="mt-1 text-muted">Payment is agreed and settled directly with your client. Confirm the amount in chat before the job.</p>
+      </div>
+    </section>
+  }
+</div>

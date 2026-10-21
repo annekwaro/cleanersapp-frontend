@@ -1,95 +1,83 @@
-<div
-  class="min-h-screen bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500"
->
-  <!-- Top bar -->
-  <div class="flex items-center justify-between px-6 py-4 text-white">
-    <button
-      (click)="goBack()"
-      class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full text-sm font-medium transition"
-    >
-      ← Back to Swiping
-    </button>
-    <h1 class="text-xl font-bold">My Matches</h1>
-    <div class="w-24"></div>
-  </div>
+<div class="mx-auto max-w-2xl">
+  <h1 class="font-display text-3xl font-semibold">Chats</h1>
+  <p class="text-sm text-muted">Agree on the details, then book a time right from the chat.</p>
 
-  <div class="px-4 pb-8">
-    <!-- Loading -->
-    @if (loading()) {
-    <div class="bg-white/90 rounded-2xl p-8 text-center max-w-sm mx-auto">
-      <div
-        class="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"
-      ></div>
-      <p class="text-gray-700">Loading matches...</p>
+  @if (matches().length > 4) {
+    <label class="relative mt-5 block">
+      <span class="sr-only">Search chats</span>
+      <app-icon name="search" [size]="18" class="absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
+      <input class="field !rounded-full !pl-11" placeholder="Search by name" [ngModel]="query()" (ngModelChange)="query.set($event)" />
+    </label>
+  }
+
+  @if (loading()) {
+    <div class="grid place-items-center py-20"><div class="spinner"></div></div>
+  } @else if (error()) {
+    <div class="card mt-6 p-8 text-center">
+      <p class="text-clay-500">{{ error() }}</p>
+      <button class="btn btn-primary mt-5" (click)="loadMatches()">Try again</button>
     </div>
-    }
-
-    <!-- Error -->
-    @if (error()) {
-    <div class="bg-white rounded-2xl p-6 max-w-sm mx-auto text-center">
-      <p class="text-red-600 mb-4">{{ error() }}</p>
-      <button
-        (click)="loadMatches()"
-        class="bg-pink-500 text-white px-6 py-2 rounded-lg hover:bg-pink-600"
-      >
-        Try again
-      </button>
+  } @else if (matches().length === 0) {
+    <div class="card mt-6 p-8 text-center">
+      <span class="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-sage-100 text-sage-700"><app-icon name="heart" [size]="26" /></span>
+      <h2 class="font-display text-2xl font-semibold">No matches yet</h2>
+      <p class="mt-2 text-sm text-muted">
+        When someone you liked likes you back, they'll show up here.
+      </p>
+      <a routerLink="/app/discover" class="btn btn-primary mt-6">Keep discovering</a>
     </div>
-    }
-
-    <!-- Empty state -->
-    @if (!loading() && !error() && matches().length === 0) {
-    <div class="bg-white rounded-2xl p-8 max-w-sm mx-auto text-center">
-      <div class="text-6xl mb-4">💔</div>
-      <h2 class="text-xl font-bold text-gray-800 mb-2">No matches yet</h2>
-      <p class="text-gray-500 mb-4">Keep swiping to find your perfect match.</p>
-      <button
-        (click)="goBack()"
-        class="bg-pink-500 text-white px-6 py-2 rounded-lg hover:bg-pink-600"
-      >
-        Start Swiping
-      </button>
-    </div>
-    }
-
-    <!-- Matches list -->
-    @if (!loading() && !error() && matches().length > 0) {
-    <div class="max-w-sm mx-auto space-y-3">
-      @for (match of matches(); track match.matchId) {
-      <div
-        (click)="openChat(match.matchId)"
-        class="bg-white rounded-2xl p-4 shadow-lg flex items-center gap-4 cursor-pointer hover:shadow-xl hover:scale-[1.02] transition"
-      >
-        <!-- Avatar -->
-        <div
-          class="w-14 h-14 rounded-full bg-gradient-to-br from-pink-400 to-orange-400 flex items-center justify-center text-white text-xl font-bold flex-shrink-0 overflow-hidden"
-        >
-          @if (match.otherUserProfilePicture) {
-          <img
-            [src]="match.otherUserProfilePicture"
-            class="w-full h-full object-cover"
-            [alt]="match.otherUserName"
-          />
-          } @else {
-          {{ match.otherUserName.charAt(0) }}
+  } @else {
+    @if (fresh().length) {
+      <section class="mt-6">
+        <p class="eyebrow mb-3">New matches · say hello</p>
+        <div class="scroll-x -mx-4 flex gap-4 px-4 pb-1">
+          @for (m of fresh(); track m.matchId) {
+            <a [routerLink]="['/app/chat', m.matchId]" class="flex w-16 shrink-0 flex-col items-center gap-1.5 text-center">
+              <span class="rounded-full p-0.5 ring-2 ring-sage-500">
+                <app-avatar [name]="m.otherUserName" [src]="m.otherUserProfilePicture" [seed]="m.otherUserId" [size]="60" />
+              </span>
+              <span class="w-full truncate text-xs font-semibold">{{ m.otherUserName.split(' ')[0] }}</span>
+            </a>
           }
         </div>
-
-        <!-- Name + role -->
-        <div class="flex-1 min-w-0">
-          <h3 class="font-semibold text-gray-800 truncate">
-            {{ match.otherUserName }}
-          </h3>
-          <p class="text-sm text-gray-500 truncate">
-            {{ match.otherUserRole }}
-          </p>
-        </div>
-
-        <!-- Chat icon -->
-        <div class="text-pink-500 text-2xl flex-shrink-0">💬</div>
-      </div>
-      }
-    </div>
+      </section>
     }
-  </div>
+
+    <section class="mt-6">
+      @if (conversations().length) {
+        <p class="eyebrow mb-3">Messages</p>
+        <ul class="space-y-2">
+          @for (m of conversations(); track m.matchId) {
+            <li>
+              <a [routerLink]="['/app/chat', m.matchId]" class="card flex items-center gap-3 p-3 pr-4 transition hover:shadow-[var(--shadow-lift)]">
+                <app-avatar [name]="m.otherUserName" [src]="m.otherUserProfilePicture" [seed]="m.otherUserId" [size]="52" />
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-baseline justify-between gap-2">
+                    <p class="truncate font-semibold">{{ m.otherUserName }}</p>
+                    <span class="shrink-0 text-xs text-muted">{{ relative(m.lastMessageAt) }}</span>
+                  </div>
+                  <p class="truncate text-sm text-muted">
+                    @if (m.lastMessageMine) { <span class="font-semibold text-forest-800">You: </span> }{{ m.lastMessage }}
+                  </p>
+                  @if (nextBooking().get(m.matchId); as b) {
+                    <span class="mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.7rem] font-bold"
+                      [class]="b.status === 'CONFIRMED' ? 'bg-sage-100 text-sage-700' : 'bg-butter-300/60 text-forest-900'">
+                      <app-icon name="calendar" [size]="12" /> {{ bookingLabel(b) }}
+                    </span>
+                  }
+                </div>
+              </a>
+            </li>
+          }
+        </ul>
+      } @else if (!query()) {
+        <p class="rounded-2xl bg-white/60 p-4 text-sm text-muted">
+          Tap a new match above to start talking. A good opener:
+          <em>{{ auth.isCleaner() ? '“Hi! What kind of clean are you looking for, and how big is your place?”' : '“Hi! Are you free for a 3-hour clean next week?”' }}</em>
+        </p>
+      } @else {
+        <p class="py-8 text-center text-sm text-muted">No chats match “{{ query() }}”.</p>
+      }
+    </section>
+  }
 </div>

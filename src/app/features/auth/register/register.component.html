@@ -1,130 +1,72 @@
-<div
-  class="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500 py-8 p-4"
->
-  <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
-    <h1 class="text-3xl font-bold text-gray-800 text-center mb-2">
-      Create Account
+<div class="bg-wash flex min-h-dvh flex-col px-4 py-5 sm:px-6">
+  <header class="mx-auto flex w-full max-w-md items-center justify-between">
+    <a routerLink="/" aria-label="Back to browsing"><app-logo /></a>
+    <a routerLink="/login" class="btn btn-ghost btn-sm">Log in</a>
+  </header>
+
+  <main class="mx-auto w-full max-w-md flex-1 py-8">
+    <h1 class="font-display text-4xl font-semibold leading-tight">
+      {{ role() === 'CLEANER' ? 'Start getting booked' : 'Create your account' }}
     </h1>
-    <p class="text-center text-gray-500 mb-6">Start matching today</p>
+    <p class="mt-2 text-muted">
+      @if (role() === 'HOMEOWNER' && guestLikes.likes().length) {
+        Your {{ guestLikes.likes().length }} like{{ guestLikes.likes().length > 1 ? 's' : '' }} will be sent as soon as you're in.
+      } @else if (role() === 'CLEANER') {
+        Three fields now. You'll polish your profile next.
+      } @else {
+        Free, and only takes a moment.
+      }
+    </p>
 
-    <form (ngSubmit)="onSubmit()" class="space-y-4">
+    <div class="mt-7 grid grid-cols-2 gap-3" role="radiogroup" aria-label="I am">
+      @for (opt of [
+        { value: 'HOMEOWNER', icon: 'home', title: 'I need a cleaner', sub: 'Find & book help' },
+        { value: 'CLEANER', icon: 'sparkles', title: "I'm a cleaner", sub: 'Find clients' }
+      ]; track opt.value) {
+        <button type="button" role="radio" [attr.aria-checked]="role() === opt.value" (click)="role.set($any(opt.value))"
+          class="rounded-3xl border-2 p-4 text-left transition"
+          [class]="role() === opt.value ? 'border-sage-600 bg-white shadow-[var(--shadow-card)]' : 'border-transparent bg-white/60'">
+          <span class="grid h-10 w-10 place-items-center rounded-2xl"
+            [class]="role() === opt.value ? 'bg-sage-600 text-white' : 'bg-cream-100 text-forest-800'">
+            <app-icon [name]="opt.icon" />
+          </span>
+          <p class="mt-3 font-semibold leading-tight">{{ opt.title }}</p>
+          <p class="text-xs text-muted">{{ opt.sub }}</p>
+        </button>
+      }
+    </div>
+
+    <form (ngSubmit)="onSubmit()" class="mt-6 space-y-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1"
-          >I am a</label
-        >
-        <div class="grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            (click)="role = 'HOMEOWNER'"
-            [class.bg-pink-500]="role === 'HOMEOWNER'"
-            [class.text-white]="role === 'HOMEOWNER'"
-            [class.bg-gray-100]="role !== 'HOMEOWNER'"
-            class="py-2.5 rounded-lg font-medium transition"
-          >
-            Homeowner
-          </button>
-          <button
-            type="button"
-            (click)="role = 'CLEANER'"
-            [class.bg-pink-500]="role === 'CLEANER'"
-            [class.text-white]="role === 'CLEANER'"
-            [class.bg-gray-100]="role !== 'CLEANER'"
-            class="py-2.5 rounded-lg font-medium transition"
-          >
-            Cleaner
-          </button>
+        <label class="label" for="name">{{ role() === 'CLEANER' ? 'Name clients will see' : 'Your name' }}</label>
+        <input id="name" type="text" [(ngModel)]="name" name="name" required autocomplete="name" class="field" placeholder="e.g. Sam Okafor" />
+      </div>
+      <div>
+        <label class="label" for="email">Email</label>
+        <input id="email" type="email" [(ngModel)]="email" name="email" required autocomplete="email" class="field" placeholder="you@example.com" />
+      </div>
+      <div>
+        <label class="label" for="password">Password</label>
+        <input id="password" type="password" [(ngModel)]="password" name="password" required minlength="6" autocomplete="new-password" class="field" placeholder="At least 6 characters" />
+      </div>
+
+      @if (role() === 'CLEANER') {
+        <div>
+          <label class="label" for="rate">Hourly rate</label>
+          <input id="rate" type="number" min="1" inputmode="numeric" [(ngModel)]="hourlyRate" name="hourlyRate" class="field" placeholder="25" />
+          <p class="hint">Tip: start near the local average to win your first reviews, then raise it.</p>
         </div>
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1"
-          >Full Name</label
-        >
-        <input
-          type="text"
-          [(ngModel)]="name"
-          name="name"
-          required
-          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
-          placeholder="John Smith"
-        />
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1"
-          >Email</label
-        >
-        <input
-          type="email"
-          [(ngModel)]="email"
-          name="email"
-          required
-          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
-          placeholder="you@example.com"
-        />
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1"
-          >Password</label
-        >
-        <input
-          type="password"
-          [(ngModel)]="password"
-          name="password"
-          required
-          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
-          placeholder="••••••••"
-        />
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Bio</label>
-        <textarea
-          [(ngModel)]="bio"
-          name="bio"
-          rows="2"
-          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
-          placeholder="Tell us a bit about yourself"
-        ></textarea>
-      </div>
-
-      @if (role === 'CLEANER') {
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1"
-          >Hourly Rate ($)</label
-        >
-        <input
-          type="number"
-          [(ngModel)]="hourlyRate"
-          name="hourlyRate"
-          required
-          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
-          placeholder="25"
-        />
-      </div>
-      } @if (error()) {
-      <div
-        class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3"
-      >
-        {{ error() }}
-      </div>
       }
 
-      <button
-        type="submit"
-        [disabled]="loading()"
-        class="w-full bg-gradient-to-r from-pink-500 to-red-500 text-white font-semibold py-2.5 rounded-lg hover:opacity-90 transition disabled:opacity-50"
-      >
-        {{ loading() ? "Creating account..." : "Sign Up" }}
+      @if (error()) {
+        <p class="flex items-start gap-2 rounded-2xl bg-clay-100 p-3 text-sm text-clay-500" role="alert">
+          <app-icon name="alert" [size]="18" /> {{ error() }}
+        </p>
+      }
+
+      <button type="submit" [disabled]="loading()" class="btn btn-primary w-full">
+        {{ loading() ? 'Creating account…' : (role() === 'CLEANER' ? 'Continue to my profile' : 'Create account') }}
       </button>
     </form>
-
-    <p class="text-center text-sm text-gray-500 mt-6">
-      Already have an account?
-      <a routerLink="/login" class="text-pink-500 font-medium hover:underline"
-        >Login</a
-      >
-    </p>
-  </div>
+  </main>
 </div>

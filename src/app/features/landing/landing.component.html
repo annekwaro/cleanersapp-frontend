@@ -1,0 +1,146 @@
+<div class="bg-wash min-h-dvh">
+  <header class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
+    <app-logo />
+    <nav class="flex items-center gap-2">
+      <a routerLink="/register" [queryParams]="{ role: 'CLEANER' }" class="hidden text-sm font-semibold text-forest-800 hover:underline sm:inline">For cleaners</a>
+      <a routerLink="/login" class="btn btn-ghost btn-sm">Log in</a>
+    </nav>
+  </header>
+
+  <main class="mx-auto grid max-w-6xl gap-10 px-4 pb-16 sm:px-6 lg:grid-cols-[1fr_26rem] gap-y-6 lg:items-center lg:gap-16 lg:pt-6">
+    <!-- Pitch -->
+    <section>
+      <p class="eyebrow mb-3 !text-sage-700">No app download · free to browse</p>
+      <h1 class="font-display text-[2.3rem] font-semibold leading-[1.05] text-forest-900 sm:text-6xl">
+        Find a cleaner you actually click with.
+      </h1>
+      <p class="mt-4 max-w-lg text-base text-forest-800/80 sm:text-lg">
+        Swipe through local cleaners right here. Like the ones you'd trust in your home — when they like you back,
+        you can chat and book a time.
+      </p>
+
+      <ol class="mt-8 hidden gap-4 lg:grid">
+        @for (step of [
+          { icon: 'heart', title: 'Swipe', text: 'Right to like, left to pass. Tap a card for the full profile.' },
+          { icon: 'chat', title: 'Match & chat', text: 'When it’s mutual, talk details: rooms, pets, keys.' },
+          { icon: 'calendar', title: 'Book a time', text: 'Send a request, they confirm. Reschedule or cancel in two taps.' }
+        ]; track step.title; let i = $index) {
+          <li class="flex gap-4">
+            <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white text-sage-700 shadow-[var(--shadow-card)]">
+              <app-icon [name]="step.icon" />
+            </span>
+            <div>
+              <p class="font-semibold">{{ i + 1 }}. {{ step.title }}</p>
+              <p class="text-sm text-muted">{{ step.text }}</p>
+            </div>
+          </li>
+        }
+      </ol>
+    </section>
+
+    <!-- Deck -->
+    <section aria-label="Browse cleaners">
+      @if (services().length > 1) {
+        <div class="scroll-x -mx-4 mb-4 flex gap-2 px-4 lg:mx-0 lg:px-0">
+          @for (s of services(); track s) {
+            <button type="button" class="chip chip-light shrink-0" [class.chip-on]="filter() === s" (click)="filter.set(s)">{{ s }}</button>
+          }
+        </div>
+      }
+
+      @if (loading()) {
+        <div class="mx-auto grid aspect-[3/4.1] w-full max-w-[24rem] place-items-center rounded-[2rem] bg-white/60">
+          <div class="spinner"></div>
+        </div>
+      } @else if (failed()) {
+        <div class="card mx-auto max-w-[24rem] p-8 text-center">
+          <span class="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-cream-100 text-forest-800"><app-icon name="refresh" [size]="24" /></span>
+          <h2 class="font-display text-2xl font-semibold">Waking the server up…</h2>
+          <p class="mt-2 text-sm text-muted">Cleaners couldn't load just now. The free server can take ~30 seconds to start.</p>
+          <div class="mt-6 flex flex-col gap-2">
+            <button class="btn btn-primary" (click)="load()">Try again</button>
+            <button class="btn btn-ghost" (click)="signUp()">Create an account instead</button>
+          </div>
+        </div>
+      } @else if (deck().length) {
+        <app-swipe-deck [profiles]="deck()" (swiped)="onSwipe($event)" (opened)="detail.set($event)" />
+        <p class="mt-4 text-center text-sm text-muted">
+          @if (guestLikes.likes().length) {
+            <button class="font-semibold text-sage-700 underline-offset-2 hover:underline" (click)="signUp()">
+              {{ guestLikes.likes().length }} liked — sign up to let them know
+            </button>
+          } @else {
+            Drag the card, or use ← → on your keyboard
+          }
+        </p>
+      } @else {
+        <div class="card mx-auto max-w-[24rem] p-8 text-center">
+          <span class="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-sage-100 text-sage-700"><app-icon name="sparkles" [size]="26" /></span>
+          <h2 class="font-display text-2xl font-semibold">
+            {{ all().length ? "That's everyone for now" : 'Cleaners are joining soon' }}
+          </h2>
+          <p class="mt-2 text-sm text-muted">
+            @if (guestLikes.likes().length) {
+              You liked {{ guestLikes.likes().length }}. Create a free account so they can like you back.
+            } @else {
+              Create an account and we'll show you new cleaners as they join.
+            }
+          </p>
+          <div class="mt-6 flex flex-col gap-2">
+            <button class="btn btn-primary" (click)="signUp()">Create free account</button>
+            @if (all().length) { <button class="btn btn-ghost" (click)="startOver()">Look again</button> }
+          </div>
+        </div>
+      }
+    </section>
+  </main>
+
+  <!-- Cleaner band -->
+  <section class="bg-forest-900 text-cream-50">
+    <div class="mx-auto grid max-w-6xl gap-8 px-4 py-14 sm:px-6 md:grid-cols-2 md:items-center">
+      <div>
+        <p class="eyebrow !text-sage-300">For cleaners</p>
+        <h2 class="mt-2 font-display text-4xl font-semibold leading-tight">Clients who fit you. A schedule you control.</h2>
+        <p class="mt-3 text-cream-50/70">Set your own rate, choose who you work with, accept or decline requests, and see exactly what you've earned.</p>
+        <button class="btn btn-primary mt-6" (click)="signUp('CLEANER')">Join as a cleaner <app-icon name="chevron" [size]="18" /></button>
+      </div>
+      <ul class="grid grid-cols-2 gap-3">
+        @for (f of [
+          { icon: 'heart', t: 'Pick your clients', d: 'Swipe on homes near you' },
+          { icon: 'calendar', t: 'Your schedule', d: 'Accept, decline, cancel' },
+          { icon: 'wallet', t: 'Earnings', d: 'Week, month, all-time' },
+          { icon: 'star', t: 'Build reviews', d: 'Ratings after every job' }
+        ]; track f.t) {
+          <li class="rounded-3xl bg-forest-800 p-4">
+            <app-icon [name]="f.icon" class="text-sage-300" />
+            <p class="mt-3 font-semibold">{{ f.t }}</p>
+            <p class="text-sm text-cream-50/60">{{ f.d }}</p>
+          </li>
+        }
+      </ul>
+    </div>
+  </section>
+</div>
+
+@if (detail(); as p) {
+  <app-profile-sheet [profile]="p" (closed)="detail.set(null)" (liked)="likeFromSheet()" (passed)="passFromSheet()" />
+}
+
+@if (prompt(); as p) {
+  <div class="scrim" (click)="prompt.set(null)">
+    <div class="sheet text-center" role="dialog" aria-modal="true" aria-label="Save your likes" (click)="$event.stopPropagation()">
+      <div class="sheet-grip"></div>
+      <span class="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-sage-100 text-sage-700">
+        <app-icon name="heart" [size]="26" [filled]="true" />
+      </span>
+      <h2 class="font-display text-2xl font-semibold">You liked {{ p.name.split(' ')[0] }}</h2>
+      <p class="mx-auto mt-2 max-w-xs text-sm text-muted">
+        Create a free account so {{ guestLikes.likes().length > 1 ? 'they' : p.name.split(' ')[0] }} can see it. You'll be able to chat as soon as it's a match.
+      </p>
+      <div class="mt-6 flex flex-col gap-2">
+        <button class="btn btn-primary" (click)="signUp()">Sign up — takes 30 seconds</button>
+        <button class="btn" (click)="prompt.set(null)">Keep browsing</button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,9 +1,182 @@
-/* You can add global styles to this file, and also import other style files */
 @import "tailwindcss";
+
+/* ---------- Design tokens ----------
+   Earthy, gender-neutral palette: forest + sage on warm cream,
+   butter as a highlight, clay only for "no"/destructive actions. */
+@theme {
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+
+  --color-forest-950: #0f1c15;
+  --color-forest-900: #14261c;
+  --color-forest-800: #1d3a2a;
+  --color-forest-700: #285039;
+
+  --color-sage-700: #2f7049;
+  --color-sage-600: #3b8a5a;
+  --color-sage-500: #4f9f6d;
+  --color-sage-300: #a9d1b5;
+  --color-sage-200: #cfe5d5;
+  --color-sage-100: #e6f1e8;
+
+  --color-cream-50: #fbfaf4;
+  --color-cream-100: #f5f2e4;
+  --color-cream-200: #ece6cc;
+
+  --color-butter-300: #eedf98;
+  --color-butter-500: #d9b13b;
+
+  --color-clay-500: #c9603f;
+  --color-clay-100: #f7e3db;
+
+  --color-ink: #17201b;
+  --color-muted: #66706a;
+  --color-line: #e3e0d0;
+
+  --shadow-card: 0 1px 2px rgb(20 38 28 / 0.06), 0 8px 24px -8px rgb(20 38 28 / 0.18);
+  --shadow-lift: 0 20px 50px -18px rgb(20 38 28 / 0.45);
+}
 
 html,
 body {
   height: 100%;
   margin: 0;
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background: var(--color-cream-100);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Riter-style wash: cream at the top fading to pale sage */
+.bg-wash {
+  background:
+    radial-gradient(120% 60% at 100% 0%, rgb(238 223 152 / 0.45), transparent 60%),
+    linear-gradient(180deg, var(--color-cream-100) 0%, var(--color-cream-50) 45%, var(--color-sage-100) 100%);
+}
+
+.font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  letter-spacing: -0.01em;
+}
+
+/* ---------- Primitives ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  padding: 0.75rem 1.25rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: background-color 0.15s, transform 0.1s, opacity 0.15s, box-shadow 0.15s;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: var(--color-sage-600); color: white; box-shadow: 0 6px 16px -6px rgb(59 138 90 / 0.6); }
+.btn-primary:hover:not(:disabled) { background: var(--color-sage-700); }
+.btn-dark { background: var(--color-forest-900); color: var(--color-cream-50); }
+.btn-dark:hover:not(:disabled) { background: var(--color-forest-800); }
+.btn-ghost { background: white; color: var(--color-ink); border: 1px solid var(--color-line); }
+.btn-ghost:hover:not(:disabled) { background: var(--color-cream-50); }
+.btn-danger { background: var(--color-clay-100); color: var(--color-clay-500); }
+.btn-danger:hover:not(:disabled) { background: #f2d3c7; }
+.btn-sm { padding: 0.5rem 0.9rem; font-size: 0.85rem; }
+
+.card {
+  background: white;
+  border-radius: 1.5rem;
+  box-shadow: var(--shadow-card);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 9999px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--color-cream-100);
+  color: var(--color-forest-800);
+  border: 1px solid transparent;
+  transition: background-color 0.15s, color 0.15s;
+}
+button.chip { cursor: pointer; }
+.chip-light { background: white; }
+.chip-on { background: var(--color-forest-900); color: var(--color-cream-50); }
+.chip-glass { background: rgb(255 255 255 / 0.18); color: white; backdrop-filter: blur(8px); border-color: rgb(255 255 255 / 0.25); }
+
+.field {
+  width: 100%;
+  border-radius: 1rem;
+  border: 1px solid var(--color-line);
+  background: white;
+  padding: 0.8rem 1rem;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.field:focus { border-color: var(--color-sage-500); box-shadow: 0 0 0 4px rgb(79 159 109 / 0.15); }
+.label { display: block; font-size: 0.8rem; font-weight: 700; color: var(--color-forest-800); margin-bottom: 0.4rem; }
+.hint { font-size: 0.78rem; color: var(--color-muted); margin-top: 0.35rem; }
+
+.eyebrow { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-muted); }
+
+.spinner {
+  width: 2rem; height: 2rem; border-radius: 9999px;
+  border: 3px solid var(--color-sage-200);
+  border-top-color: var(--color-sage-600);
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- Overlays ---------- */
+.scrim {
+  position: fixed; inset: 0; z-index: 60;
+  background: rgb(15 28 21 / 0.55);
+  backdrop-filter: blur(2px);
+  display: flex; align-items: flex-end; justify-content: center;
+  animation: fade-in 0.2s ease-out;
+}
+@media (min-width: 640px) { .scrim { align-items: center; padding: 1.5rem; } }
+
+.sheet {
+  width: 100%; max-width: 32rem; max-height: 92dvh; overflow-y: auto;
+  background: var(--color-cream-50);
+  border-radius: 1.75rem 1.75rem 0 0;
+  padding: 1.5rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom));
+  animation: sheet-up 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+}
+@media (min-width: 640px) { .sheet { border-radius: 1.75rem; padding: 1.75rem; } }
+.sheet-grip { width: 2.5rem; height: 0.3rem; border-radius: 9999px; background: var(--color-line); margin: -0.5rem auto 1rem; }
+@media (min-width: 640px) { .sheet-grip { display: none; } }
+
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes sheet-up { from { transform: translateY(40px); opacity: 0; } }
+@keyframes pop-in { 0% { transform: scale(0.85); opacity: 0; } 70% { transform: scale(1.03); } }
+.pop-in { animation: pop-in 0.35s ease-out; }
+
+.toast {
+  position: fixed; left: 50%; bottom: calc(6.5rem + env(safe-area-inset-bottom)); z-index: 70;
+  transform: translateX(-50%);
+  background: var(--color-forest-900); color: var(--color-cream-50);
+  padding: 0.7rem 1.1rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600;
+  box-shadow: var(--shadow-lift);
+  animation: sheet-up 0.25s ease-out;
+  max-width: calc(100vw - 2rem);
+}
+
+.scroll-x { overflow-x: auto; scrollbar-width: none; }
+.scroll-x::-webkit-scrollbar { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }

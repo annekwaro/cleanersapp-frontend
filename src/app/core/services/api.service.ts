@@ -1,6 +1,15 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
+import {
+  Booking,
+  BookingDraft,
+  Match,
+  Message,
+  Profile,
+  ProfileUpdate,
+  SwipeResult,
+} from '../models';
 
 @Injectable({
   providedIn: 'root',
@@ -20,41 +29,94 @@ export class ApiService {
     return this.http.post(`${this.API_URL}/auth/login`, data);
   }
 
-  getMe(): Observable<any> {
-    return this.http.get(`${this.API_URL}/auth/me`);
+  // PUBLIC (no login needed)
+  getPublicCleaners(): Observable<Profile[]> {
+    return this.http.get<Profile[]>(`${this.API_URL}/public/cleaners`).pipe(map((list) => list.map(normalizeProfile)));
   }
 
   // SWIPES
-  getSwipeProfiles(): Observable<any> {
-    return this.http.get(`${this.API_URL}/swipe/profiles`);
+  getSwipeProfiles(): Observable<Profile[]> {
+    return this.http.get<Profile[]>(`${this.API_URL}/swipe/profiles`).pipe(map((list) => list.map(normalizeProfile)));
   }
 
-  swipe(targetId: number, direction: 'LIKE' | 'PASS'): Observable<any> {
-    return this.http.post(
-      `${this.API_URL}/swipe/${targetId}?direction=${direction}`,
-      {}
-    );
+  swipe(targetId: number, direction: 'LIKE' | 'PASS'): Observable<SwipeResult> {
+    return this.http.post<SwipeResult>(`${this.API_URL}/swipe/${targetId}?direction=${direction}`, {});
   }
 
-  getMatches(): Observable<any> {
-    return this.http.get(`${this.API_URL}/matches`);
+  getMatches(): Observable<Match[]> {
+    return this.http.get<Match[]>(`${this.API_URL}/matches`);
   }
 
   // CHAT
-  sendMessage(matchId: number, content: string): Observable<any> {
-    return this.http.post(`${this.API_URL}/chat/${matchId}`, { content });
+  sendMessage(matchId: number, content: string): Observable<Message> {
+    return this.http.post<any>(`${this.API_URL}/chat/${matchId}`, { content }).pipe(map(normalizeMessage));
   }
 
-  getMessages(matchId: number): Observable<any> {
-    return this.http.get(`${this.API_URL}/chat/${matchId}`);
+  getMessages(matchId: number): Observable<Message[]> {
+    return this.http.get<any[]>(`${this.API_URL}/chat/${matchId}`).pipe(map((list) => list.map(normalizeMessage)));
   }
 
   // PROFILE
-  getMyProfile(): Observable<any> {
-    return this.http.get(`${this.API_URL}/profile/me`);
+  getMyProfile(): Observable<Profile> {
+    return this.http.get<Profile>(`${this.API_URL}/profile/me`).pipe(map(normalizeProfile));
   }
 
-  updateProfile(data: any): Observable<any> {
-    return this.http.put(`${this.API_URL}/profile/me`, data);
+  getProfile(userId: number): Observable<Profile> {
+    return this.http.get<Profile>(`${this.API_URL}/profile/${userId}`).pipe(map(normalizeProfile));
   }
+
+  updateProfile(data: ProfileUpdate): Observable<Profile> {
+    return this.http.put<Profile>(`${this.API_URL}/profile/me`, data).pipe(map(normalizeProfile));
+  }
+
+  // BOOKINGS
+  getBookings(): Observable<Booking[]> {
+    return this.http.get<Booking[]>(`${this.API_URL}/bookings`);
+  }
+
+  getMatchBookings(matchId: number): Observable<Booking[]> {
+    return this.http.get<Booking[]>(`${this.API_URL}/bookings/match/${matchId}`);
+  }
+
+  createBooking(draft: BookingDraft): Observable<Booking> {
+    return this.http.post<Booking>(`${this.API_URL}/bookings`, draft);
+  }
+
+  confirmBooking(id: number): Observable<Booking> {
+    return this.http.post<Booking>(`${this.API_URL}/bookings/${id}/confirm`, {});
+  }
+
+  declineBooking(id: number): Observable<Booking> {
+    return this.http.post<Booking>(`${this.API_URL}/bookings/${id}/decline`, {});
+  }
+
+  cancelBooking(id: number, reason: string): Observable<Booking> {
+    return this.http.post<Booking>(`${this.API_URL}/bookings/${id}/cancel`, { reason });
+  }
+
+  completeBooking(id: number): Observable<Booking> {
+    return this.http.post<Booking>(`${this.API_URL}/bookings/${id}/complete`, {});
+  }
+
+  rateBooking(id: number, rating: number): Observable<Booking> {
+    return this.http.post<Booking>(`${this.API_URL}/bookings/${id}/rate`, { rating });
+  }
+}
+
+// Jackson serialises a Lombok `boolean isMine` as "mine", so accept both spellings.
+function normalizeMessage(m: any): Message {
+  return { ...m, isMine: m.isMine ?? m.mine ?? false };
+}
+
+// Older backend builds don't send the structured fields yet.
+function normalizeProfile(p: any): Profile {
+  return {
+    ...p,
+    services: p.services ?? [],
+    languages: p.languages ?? [],
+    availableDays: p.availableDays ?? [],
+    completedJobs: p.completedJobs ?? 0,
+    profilePicture: p.profilePicture || null,
+    bio: p.bio || null,
+  };
 }

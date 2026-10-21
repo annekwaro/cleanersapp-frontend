@@ -1,13 +1,10 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, computed, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { tap } from 'rxjs/operators';
 import { ApiService } from './api.service';
+import { User } from '../models';
 
-export interface User {
-  email: string;
-  name: string;
-  role: 'HOMEOWNER' | 'CLEANER';
-}
+export type { User } from '../models';
 
 @Injectable({
   providedIn: 'root',
@@ -17,6 +14,7 @@ export class AuthService {
   private readonly USER_KEY = 'cleanersapp_user';
 
   currentUser = signal<User | null>(this.loadUserFromStorage());
+  isCleaner = computed(() => this.currentUser()?.role === 'CLEANER');
 
   constructor(private api: ApiService, private router: Router) {}
 
@@ -44,22 +42,30 @@ export class AuthService {
   }
 
   private loadUserFromStorage(): User | null {
-    const stored = localStorage.getItem(this.USER_KEY);
-    return stored ? JSON.parse(stored) : null;
+    try {
+      const stored = localStorage.getItem(this.USER_KEY);
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
   }
 
   getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+    try {
+      return localStorage.getItem(this.TOKEN_KEY);
+    } catch {
+      return null;
+    }
   }
 
   isLoggedIn(): boolean {
-    return !!this.getToken();
+    return !!this.getToken() && !!this.currentUser();
   }
 
   logout() {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
     this.currentUser.set(null);
-    this.router.navigate(['/login']);
+    this.router.navigate(['/']);
   }
 }
