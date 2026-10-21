@@ -1,26 +1,28 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ApiService } from '../../core/services/api.service';
+import { BookingsStore } from '../../core/services/bookings.store';
 import { ToastService } from '../../core/services/toast.service';
 import { Profile } from '../../core/models';
+import { dayLabel, money, toDate } from '../../core/format';
 import { profileStrength } from '../../core/profile-strength';
 import { SwipeDeckComponent, SwipeDirection } from '../../shared/swipe-deck.component';
 import { ProfileSheetComponent } from '../../shared/profile-sheet.component';
 import { MatchModalComponent } from '../../shared/match-modal.component';
 import { IconComponent } from '../../shared/icon.component';
 
-type Sort = 'best' | 'price' | 'experience';
-
+/** Cleaner's Home tab: today at a glance, then homes to swipe on. */
 @Component({
   selector: 'app-swipe',
   standalone: true,
   imports: [RouterLink, SwipeDeckComponent, ProfileSheetComponent, MatchModalComponent, IconComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './swipe.component.html',
-  styleUrl: './swipe.component.css',
 })
 export class SwipeComponent implements OnInit {
   auth = inject(AuthService);
+  store = inject(BookingsStore);
   private api = inject(ApiService);
   private router = inject(Router);
   private toast = inject(ToastService);
@@ -28,27 +30,30 @@ export class SwipeComponent implements OnInit {
   profiles = signal<Profile[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
-  filter = signal('All');
-  sort = signal<Sort>('best');
   detail = signal<Profile | null>(null);
   match = signal<{ profile: Profile; matchId?: number } | null>(null);
   strength = signal<number | null>(null);
 
-  services = computed(() => {
-    const counts = new Map<string, number>();
-    this.profiles().forEach((p) => p.services.forEach((s) => counts.set(s, (counts.get(s) ?? 0) + 1)));
-    return ['All', ...[...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([s]) => s)];
+  next = computed(() => {
+    const b = this.store.upcoming()[0];
+    if (!b) return null;
+    const d = toDate(b.startAt);
+    return {
+      day: dayLabel(d).split(',')[0],
+      time: d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }),
+      who: b.otherUserName.split(' ')[0],
+    };
   });
 
-  deck = computed(() => {
-    const f = this.filter();
-    const list = this.profiles().filter((p) => f === 'All' || p.services.includes(f));
-    const by: Record<Sort, (a: Profile, b: Profile) => number> = {
-      best: (a, b) => (b.rating ?? 0) - (a.rating ?? 0),
-      price: (a, b) => (a.hourlyRate ?? 1e9) - (b.hourlyRate ?? 1e9),
-      experience: (a, b) => (b.yearsExperience ?? 0) - (a.yearsExperience ?? 0),
-    };
-    return this.auth.isCleaner() ? list : [...list].sort(by[this.sort()]);
+  monthEarned = computed(() => {
+    const now = new Date();
+    const from = new Date(now.getFullYear(), now.getMonth(), 1);
+    return money(
+      this.store
+        .bookings()
+        .filter((b) => b.status === 'COMPLETED' && toDate(b.startAt) >= from)
+        .reduce((s, b) => s + b.totalAmount, 0)
+    );
   });
 
   ngOnInit() {
@@ -69,7 +74,7 @@ export class SwipeComponent implements OnInit {
       },
       error: (err) => {
         this.loading.set(false);
-        this.error.set(err?.error?.error || 'Could not load profiles. The server may be waking up.');
+        this.error.set(err?.error?.error || 'Could not load homes. The server may be waking up.');
       },
     });
   }
@@ -97,6 +102,6 @@ export class SwipeComponent implements OnInit {
   openChat() {
     const m = this.match();
     this.match.set(null);
-    this.router.navigate(m?.matchId ? ['/app/chat', m.matchId] : ['/app/chats']);
+    this.router.navigate(m?.matchId ? ['/chat', m.matchId] : ['/messages']);
   }
 }

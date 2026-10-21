@@ -12,7 +12,7 @@ import { swatchFor } from './avatar.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block h-full w-full' },
   template: `
-    <article class="relative h-full w-full overflow-hidden rounded-[2rem] bg-forest-900 select-none"
+    <article class="relative h-full w-full overflow-hidden rounded-[2rem] bg-coal-900 select-none"
       [style.boxShadow]="'var(--shadow-lift)'">
       @if (p().profilePicture && !broken()) {
         <img [src]="p().profilePicture" [alt]="p().name" draggable="false"
@@ -30,16 +30,16 @@ import { swatchFor } from './avatar.component';
       <!-- top pills -->
       <div class="absolute inset-x-0 top-0 flex items-start justify-between p-4">
         @if (isCleaner()) {
-          <span class="chip !bg-white/95 !text-forest-900 shadow-sm">
+          <span class="chip !bg-white/95 !text-coal-900 shadow-sm">
             <app-icon name="star" [size]="14" [filled]="true" class="text-butter-500" />
             {{ p().rating ? p().rating!.toFixed(1) : 'New' }}
             @if (p().completedJobs) { <span class="font-medium text-muted">· {{ p().completedJobs }} jobs</span> }
           </span>
           @if (p().hourlyRate) {
-            <span class="chip !bg-sage-600 !text-white shadow-sm">{{ rate() }}<span class="font-medium opacity-80">/h</span></span>
+            <span class="chip !bg-brand-600 !text-white shadow-sm">{{ rate() }}<span class="font-medium opacity-80">/h</span></span>
           }
         } @else {
-          <span class="chip !bg-white/95 !text-forest-900 shadow-sm">
+          <span class="chip !bg-white/95 !text-coal-900 shadow-sm">
             <app-icon name="home" [size]="14" /> Home
           </span>
         }
@@ -47,7 +47,7 @@ import { swatchFor } from './avatar.component';
 
       <!-- bottom info -->
       <div class="absolute inset-x-0 bottom-0 p-5 pt-24 text-white"
-        style="background: linear-gradient(to top, rgb(15 28 21 / .92) 10%, rgb(15 28 21 / .55) 60%, transparent)">
+        style="background: linear-gradient(to top, rgb(29 26 41 / .92) 10%, rgb(29 26 41 / .55) 60%, transparent)">
         <h2 class="font-display text-3xl font-semibold leading-tight">{{ p().name }}</h2>
         @if (p().headline) {
           <p class="mt-1 text-[0.95rem] font-medium text-white/90 line-clamp-2">{{ p().headline }}</p>
@@ -83,6 +83,6 @@ export class ProfileCardComponent {
   rate = computed(() => money(this.p().hourlyRate));
   fallbackBg = computed(() => {
     const c = swatchFor(this.p().id || this.p().name);
-    return `linear-gradient(160deg, ${c} 0%, color-mix(in srgb, ${c} 70%, #0f1c15) 100%)`;
+    return `linear-gradient(160deg, ${c} 0%, color-mix(in srgb, ${c} 70%, #1d1a29) 100%)`;
   });
 }

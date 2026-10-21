@@ -1,9 +1,10 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { GuestLikesService } from '../../../core/services/guest-likes.service';
-import { ToastService } from '../../../core/services/toast.service';
+import { PostAuthService } from '../../../core/services/post-auth.service';
+import { GuestRequestService } from '../../../core/services/guest-request.service';
 import { Role } from '../../../core/models';
 import { LogoComponent } from '../../../shared/logo.component';
 import { IconComponent } from '../../../shared/icon.component';
@@ -17,10 +18,10 @@ import { IconComponent } from '../../../shared/icon.component';
 })
 export class RegisterComponent implements OnInit {
   private auth = inject(AuthService);
-  private router = inject(Router);
   private route = inject(ActivatedRoute);
   guestLikes = inject(GuestLikesService);
-  private toast = inject(ToastService);
+  guestRequest = inject(GuestRequestService);
+  private postAuth = inject(PostAuthService);
 
   email = '';
   password = '';
@@ -60,15 +61,7 @@ export class RegisterComponent implements OnInit {
     this.auth.register(payload).subscribe({
       next: () => {
         this.loading.set(false);
-        if (this.role() === 'CLEANER') {
-          // A complete profile is what gets cleaners matched — go there first
-          this.router.navigate(['/app/profile'], { queryParams: { welcome: 1 } });
-          return;
-        }
-        this.guestLikes.flush().subscribe((matched) => {
-          if (matched.length) this.toast.show(`It's a match with ${matched.join(', ')}!`);
-        });
-        this.router.navigate(['/app/discover']);
+        this.postAuth.continue(true);
       },
       error: (err) => {
         this.loading.set(false);

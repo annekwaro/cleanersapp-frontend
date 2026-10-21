@@ -12,9 +12,9 @@ import { IconComponent } from './icon.component';
 import { AvatarComponent } from './avatar.component';
 
 const STATUS: Record<string, { label: string; cls: string }> = {
-  REQUESTED: { label: 'Pending', cls: 'bg-butter-300/60 text-forest-900' },
-  CONFIRMED: { label: 'Confirmed', cls: 'bg-sage-100 text-sage-700' },
-  COMPLETED: { label: 'Completed', cls: 'bg-forest-900 text-cream-50' },
+  REQUESTED: { label: 'Pending', cls: 'bg-butter-300/60 text-coal-900' },
+  CONFIRMED: { label: 'Confirmed', cls: 'bg-brand-100 text-brand-700' },
+  COMPLETED: { label: 'Completed', cls: 'bg-coal-900 text-cream-50' },
   DECLINED: { label: 'Declined', cls: 'bg-clay-100 text-clay-500' },
   CANCELLED: { label: 'Cancelled', cls: 'bg-clay-100 text-clay-500' },
 };
@@ -30,7 +30,7 @@ const STATUS: Record<string, { label: string; cls: string }> = {
         @if (showPerson()) {
           <app-avatar [name]="b().otherUserName" [src]="b().otherUserProfilePicture" [seed]="b().otherUserId" [size]="44" />
         } @else {
-          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-sage-100 text-sage-700"><app-icon name="calendar" /></span>
+          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-brand-100 text-brand-700"><app-icon name="calendar" /></span>
         }
         <div class="min-w-0 flex-1">
           <div class="flex items-center justify-between gap-2">
@@ -44,7 +44,7 @@ const STATUS: Record<string, { label: string; cls: string }> = {
       </div>
 
       <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm">
-        <span class="inline-flex items-center gap-1.5 text-forest-800"><app-icon name="clock" [size]="15" />{{ b().durationHours }}h × {{ rate() }}</span>
+        <span class="inline-flex items-center gap-1.5 text-coal-800"><app-icon name="clock" [size]="15" />{{ b().durationHours }}h × {{ rate() }}</span>
         <span class="font-display text-lg font-semibold">{{ total() }}</span>
         @if (b().address) {
           <span class="inline-flex min-w-0 items-center gap-1.5 text-muted"><app-icon name="pin" [size]="15" /><span class="truncate">{{ b().address }}</span></span>
@@ -52,7 +52,7 @@ const STATUS: Record<string, { label: string; cls: string }> = {
       </div>
 
       @if (b().notes) {
-        <p class="mt-2 rounded-xl bg-cream-100 px-3 py-2 text-sm text-forest-800">“{{ b().notes }}”</p>
+        <p class="mt-2 rounded-xl bg-cream-100 px-3 py-2 text-sm text-coal-800">“{{ b().notes }}”</p>
       }
       @if (b().status === 'CANCELLED') {
         <p class="mt-2 text-sm text-clay-500">
@@ -103,12 +103,12 @@ const STATUS: Record<string, { label: string; cls: string }> = {
             </button>
           }
           @if (showChatLink()) {
-            <a class="btn btn-ghost btn-sm ml-auto" [routerLink]="['/app/chat', b().matchId]"><app-icon name="chat" [size]="16" /> Chat</a>
+            <a class="btn btn-ghost btn-sm ml-auto" [routerLink]="['/chat', b().matchId]"><app-icon name="chat" [size]="16" /> Chat</a>
           }
         </div>
       }
       @if (b().rating) {
-        <p class="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-forest-800">
+        <p class="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-coal-800">
           @for (s of stars(); track $index) { <app-icon name="star" [size]="15" [filled]="true" class="text-butter-500" /> }
           <span class="ml-1 font-medium text-muted">rated</span>
         </p>

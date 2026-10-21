@@ -155,6 +155,7 @@ export class ProfileComponent implements OnInit {
         yearsExperience: d.yearsExperience ?? undefined,
         bringsSupplies: d.bringsSupplies ?? false,
         petFriendly: d.petFriendly ?? false,
+        ...(this.isCleaner() ? { acceptsDirectRequests: d.acceptsDirectRequests } : {}),
         ...(this.isCleaner() && d.hourlyRate ? { hourlyRate: d.hourlyRate } : {}),
       })
       .subscribe({

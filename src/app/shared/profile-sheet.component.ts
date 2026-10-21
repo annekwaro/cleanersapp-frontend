@@ -1,44 +1,72 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { DAYS, Profile } from '../core/models';
-import { DAY_NAMES, money } from '../core/format';
+import { DAY_NAMES, initials, money } from '../core/format';
+import { swatchFor } from './avatar.component';
 import { IconComponent } from './icon.component';
-import { ProfileCardComponent } from './profile-card.component';
 
-/** Full profile, Riter "detail" style: big photo, facts, then one clear action. */
+/** Full profile: big photo, a white panel of facts, then one clear action. */
 @Component({
   selector: 'app-profile-sheet',
   standalone: true,
-  imports: [IconComponent, ProfileCardComponent],
+  imports: [IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="scrim" (click)="closed.emit()">
-      <div class="sheet !p-0" role="dialog" aria-modal="true" [attr.aria-label]="p().name" (click)="$event.stopPropagation()">
-        <div class="relative h-[22rem] p-3 pb-0">
-          <app-profile-card [profile]="p()" />
-          <button type="button" (click)="closed.emit()" aria-label="Close"
-            class="absolute left-6 top-6 z-10 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-forest-900 shadow">
-            <app-icon name="back" [size]="18" />
-          </button>
+      <div class="sheet !bg-white !p-0" role="dialog" aria-modal="true" [attr.aria-label]="p().name" (click)="$event.stopPropagation()">
+        <!-- Photo -->
+        <div class="relative h-[21rem] overflow-hidden rounded-t-[1.75rem] sm:rounded-t-[1.75rem]" [style.background]="fallbackBg()">
+          <span class="absolute left-1/2 top-[42%] -translate-x-1/2 -translate-y-1/2 text-[6.5rem] font-extrabold leading-none text-white/90">{{ letters() }}</span>
+          @if (p().profilePicture && !broken()) {
+            <img [src]="p().profilePicture" [alt]="p().name" class="absolute inset-0 h-full w-full object-cover" (error)="broken.set(true)" />
+          }
+          <div class="absolute inset-x-0 top-0 flex justify-between p-4">
+            <button type="button" (click)="closed.emit()" aria-label="Close"
+              class="grid h-11 w-11 place-items-center rounded-full bg-white text-coal-900 shadow">
+              <app-icon name="back" [size]="18" />
+            </button>
+            @if (actions()) {
+              <button type="button" (click)="liked.emit()" [attr.aria-label]="(likedAlready() ? 'Liked ' : 'Like ') + firstName()" [attr.aria-pressed]="likedAlready()"
+                class="grid h-11 w-11 place-items-center rounded-full bg-white shadow" [class]="likedAlready() ? 'text-brand-600' : 'text-coal-900'">
+                <app-icon name="heart" [size]="20" [filled]="likedAlready()" />
+              </button>
+            }
+          </div>
         </div>
 
-        <div class="space-y-6 px-5 pb-6 pt-5 sm:px-6">
-          <div class="grid grid-cols-3 gap-2 text-center">
-            <div class="rounded-2xl bg-white p-3">
-              <p class="font-display text-xl font-semibold">{{ p().rating ? p().rating!.toFixed(1) : '—' }}</p>
+        <!-- Details panel overlaps the photo -->
+        <div class="relative -mt-7 space-y-6 rounded-t-[1.75rem] bg-white px-5 pb-6 pt-6 sm:px-6">
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-[1.7rem] font-extrabold leading-tight tracking-tight">{{ p().name }}</h2>
+              @if (canRequest()) { <span class="rounded-full bg-brand-100 px-2.5 py-1 text-xs font-bold text-brand-700">Taking bookings</span> }
+            </div>
+            @if (p().headline) { <p class="mt-1 text-muted">{{ p().headline }}</p> }
+            @if (p().serviceArea) {
+              <p class="mt-1.5 flex items-center gap-1.5 text-sm text-muted"><app-icon name="pin" [size]="15" />{{ p().serviceArea }}</p>
+            }
+          </div>
+
+          <div class="grid grid-cols-3 gap-2.5">
+            <div class="rounded-2xl border border-line p-3">
+              <app-icon name="star" [size]="18" [filled]="true" class="text-butter-500" />
+              <p class="mt-1.5 font-bold">{{ p().rating ? p().rating!.toFixed(1) : 'New' }}</p>
               <p class="text-xs text-muted">Rating</p>
             </div>
             @if (isCleaner()) {
-              <div class="rounded-2xl bg-white p-3">
-                <p class="font-display text-xl font-semibold">{{ p().completedJobs }}</p>
+              <div class="rounded-2xl border border-line p-3">
+                <app-icon name="check" [size]="18" class="text-brand-600" />
+                <p class="mt-1.5 font-bold">{{ p().completedJobs }}</p>
                 <p class="text-xs text-muted">Jobs done</p>
               </div>
-              <div class="rounded-2xl bg-white p-3">
-                <p class="font-display text-xl font-semibold">{{ rate() }}</p>
+              <div class="rounded-2xl border border-line p-3">
+                <app-icon name="wallet" [size]="18" class="text-brand-600" />
+                <p class="mt-1.5 font-bold">{{ rate() }}</p>
                 <p class="text-xs text-muted">Per hour</p>
               </div>
             } @else {
-              <div class="col-span-2 rounded-2xl bg-white p-3">
-                <p class="font-display text-xl font-semibold truncate">{{ p().serviceArea || '—' }}</p>
+              <div class="col-span-2 rounded-2xl border border-line p-3">
+                <app-icon name="home" [size]="18" class="text-brand-600" />
+                <p class="mt-1.5 truncate font-bold">{{ p().serviceArea || '—' }}</p>
                 <p class="text-xs text-muted">Neighbourhood</p>
               </div>
             }
@@ -46,27 +74,27 @@ import { ProfileCardComponent } from './profile-card.component';
 
           @if (p().bio) {
             <section>
-              <p class="eyebrow mb-2">About</p>
-              <p class="whitespace-pre-line leading-relaxed text-forest-900/90">{{ p().bio }}</p>
+              <h3 class="mb-1.5 font-bold">About {{ firstName() }}</h3>
+              <p class="whitespace-pre-line text-[0.95rem] leading-relaxed text-coal-800">{{ p().bio }}</p>
             </section>
           }
 
           @if (p().services.length) {
             <section>
-              <p class="eyebrow mb-2">{{ isCleaner() ? 'Services' : 'Looking for' }}</p>
+              <h3 class="mb-2 font-bold">{{ isCleaner() ? 'Services' : 'Looking for' }}</h3>
               <div class="flex flex-wrap gap-2">
-                @for (s of p().services; track s) { <span class="chip !bg-sage-100">{{ s }}</span> }
+                @for (s of p().services; track s) { <span class="chip !border-line !bg-white">{{ s }}</span> }
               </div>
             </section>
           }
 
           @if (p().availableDays.length) {
             <section>
-              <p class="eyebrow mb-2">{{ isCleaner() ? 'Usually available' : 'Preferred days' }}</p>
+              <h3 class="mb-2 font-bold">{{ isCleaner() ? 'Usually available' : 'Preferred days' }}</h3>
               <div class="flex gap-1.5">
                 @for (d of days; track d) {
                   <span class="grid h-10 flex-1 place-items-center rounded-xl text-xs font-bold"
-                    [class]="p().availableDays.includes(d) ? 'bg-forest-900 text-cream-50' : 'bg-white text-muted/60'">
+                    [class]="p().availableDays.includes(d) ? 'bg-brand-600 text-white' : 'bg-cream-100 text-muted/60'">
                     {{ dayNames[d] }}
                   </span>
                 }
@@ -74,42 +102,48 @@ import { ProfileCardComponent } from './profile-card.component';
             </section>
           }
 
-          <section class="divide-y divide-line rounded-2xl bg-white">
-            @if (p().serviceArea) {
-              <div class="flex items-center gap-3 p-4">
-                <span class="grid h-9 w-9 place-items-center rounded-full bg-sage-100 text-sage-700"><app-icon name="pin" [size]="18" /></span>
-                <div><p class="eyebrow">{{ isCleaner() ? 'Works in' : 'Location' }}</p><p class="font-semibold">{{ p().serviceArea }}</p></div>
-              </div>
-            }
+          <section class="flex flex-wrap gap-2">
             @if (p().yearsExperience) {
-              <div class="flex items-center gap-3 p-4">
-                <span class="grid h-9 w-9 place-items-center rounded-full bg-sage-100 text-sage-700"><app-icon name="briefcase" [size]="18" /></span>
-                <div><p class="eyebrow">Experience</p><p class="font-semibold">{{ p().yearsExperience }} years</p></div>
-              </div>
+              <span class="chip !bg-cream-100"><app-icon name="briefcase" [size]="15" /> {{ p().yearsExperience }} yrs experience</span>
             }
             @if (p().bringsSupplies !== null) {
-              <div class="flex items-center gap-3 p-4">
-                <span class="grid h-9 w-9 place-items-center rounded-full bg-sage-100 text-sage-700"><app-icon name="box" [size]="18" /></span>
-                <div><p class="eyebrow">Supplies</p><p class="font-semibold">{{ suppliesText() }}</p></div>
-              </div>
+              <span class="chip !bg-cream-100"><app-icon name="box" [size]="15" /> {{ suppliesText() }}</span>
+            }
+            @if (p().petFriendly) {
+              <span class="chip !bg-cream-100"><app-icon name="paw" [size]="15" /> {{ isCleaner() ? 'Pet friendly' : 'Has pets' }}</span>
             }
             @if (p().languages.length) {
-              <div class="flex items-center gap-3 p-4">
-                <span class="grid h-9 w-9 place-items-center rounded-full bg-sage-100 text-sage-700"><app-icon name="globe" [size]="18" /></span>
-                <div><p class="eyebrow">Speaks</p><p class="font-semibold">{{ p().languages.join(', ') }}</p></div>
-              </div>
+              <span class="chip !bg-cream-100"><app-icon name="globe" [size]="15" /> {{ p().languages.join(', ') }}</span>
             }
           </section>
         </div>
 
         @if (actions()) {
-          <div class="sticky bottom-0 flex gap-3 border-t border-line bg-cream-50/95 px-5 py-4 backdrop-blur sm:px-6">
-            <button type="button" class="btn btn-ghost flex-1" (click)="passed.emit()">
-              <app-icon name="x" [size]="18" /> Pass
-            </button>
-            <button type="button" class="btn btn-primary flex-[2]" (click)="liked.emit()">
-              <app-icon name="heart" [size]="18" [filled]="true" /> Like {{ firstName() }}
-            </button>
+          <div class="sticky bottom-0 border-t border-line bg-white/95 px-5 py-4 backdrop-blur sm:px-6">
+            <div class="flex gap-2.5">
+              @if (passable()) {
+                <button type="button" class="btn btn-ghost !px-4" (click)="passed.emit()" aria-label="Pass">
+                  <app-icon name="x" [size]="20" />
+                </button>
+              }
+              @if (canRequest()) {
+                @if (passable()) {
+                  <button type="button" class="btn btn-ghost !px-4 text-brand-600" (click)="liked.emit()" [attr.aria-label]="'Like ' + firstName()">
+                    <app-icon name="heart" [size]="20" [filled]="true" />
+                  </button>
+                }
+                <button type="button" class="btn btn-primary flex-1 !py-3.5" (click)="request.emit()">
+                  <app-icon name="calendar-plus" [size]="18" /> Request a clean
+                </button>
+              } @else {
+                <button type="button" class="btn btn-primary flex-1 !py-3.5" (click)="liked.emit()" [disabled]="likedAlready()">
+                  <app-icon name="heart" [size]="18" [filled]="true" /> {{ likedAlready() ? 'Liked' : 'Like ' + firstName() }}
+                </button>
+              }
+            </div>
+            @if (canRequest()) {
+              <p class="mt-2 text-center text-xs text-muted">No payment now — {{ firstName() }} confirms the time first.</p>
+            }
           </div>
         }
       </div>
@@ -118,14 +152,27 @@ import { ProfileCardComponent } from './profile-card.component';
 export class ProfileSheetComponent {
   p = input.required<Profile>({ alias: 'profile' });
   actions = input(true);
+  /** Show "Request a clean" (homeowners and guests viewing a cleaner who takes direct requests). */
+  requestable = input(false);
+  /** Offer "Pass" (swipe mode); in a list there's nothing to pass on. */
+  passable = input(true);
+  likedAlready = input(false);
   closed = output<void>();
   liked = output<void>();
   passed = output<void>();
+  request = output<void>();
 
   days = DAYS;
   dayNames = DAY_NAMES;
   isCleaner = computed(() => this.p().role === 'CLEANER');
+  canRequest = computed(() => this.requestable() && this.isCleaner() && this.p().acceptsDirectRequests);
   rate = computed(() => (this.p().hourlyRate ? money(this.p().hourlyRate) : '—'));
+  broken = signal(false);
+  letters = computed(() => initials(this.p().name));
+  fallbackBg = computed(() => {
+    const c = swatchFor(this.p().id || this.p().name);
+    return `linear-gradient(160deg, color-mix(in srgb, ${c} 75%, white) 0%, ${c} 100%)`;
+  });
   firstName = computed(() => this.p().name.split(' ')[0]);
   suppliesText = computed(() => {
     const yes = this.p().bringsSupplies;

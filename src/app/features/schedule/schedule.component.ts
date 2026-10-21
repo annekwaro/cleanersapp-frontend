@@ -6,6 +6,7 @@ import { Booking } from '../../core/models';
 import { dayLabel, money, sameDay, startOfWeek, toDate } from '../../core/format';
 import { BookingCardComponent } from '../../shared/booking-card.component';
 import { IconComponent } from '../../shared/icon.component';
+import { GuestGateComponent } from '../../shared/guest-gate.component';
 
 type Tab = 'requests' | 'upcoming' | 'past' | 'cancelled';
 
@@ -17,7 +18,7 @@ interface Group {
 @Component({
   selector: 'app-schedule',
   standalone: true,
-  imports: [RouterLink, BookingCardComponent, IconComponent],
+  imports: [RouterLink, BookingCardComponent, IconComponent, GuestGateComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './schedule.component.html',
 })
@@ -116,6 +117,7 @@ export class ScheduleComponent implements OnInit {
   });
 
   ngOnInit() {
+    if (!this.auth.isLoggedIn()) return;
     this.store.refresh();
     if (this.store.needsReply().length) this.tab.set('requests');
   }

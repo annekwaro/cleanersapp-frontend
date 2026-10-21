@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
@@ -8,15 +8,16 @@ import { Booking, Match } from '../../core/models';
 import { dayLabel, relativeShort, toDate } from '../../core/format';
 import { AvatarComponent } from '../../shared/avatar.component';
 import { IconComponent } from '../../shared/icon.component';
+import { GuestGateComponent } from '../../shared/guest-gate.component';
 
 @Component({
   selector: 'app-matches',
   standalone: true,
-  imports: [RouterLink, FormsModule, AvatarComponent, IconComponent],
+  imports: [RouterLink, FormsModule, AvatarComponent, IconComponent, GuestGateComponent],
   templateUrl: './matches.component.html',
   styleUrl: './matches.component.css',
 })
-export class MatchesComponent implements OnInit, OnDestroy {
+export class MatchesComponent implements OnDestroy {
   private api = inject(ApiService);
   auth = inject(AuthService);
   private store = inject(BookingsStore);
@@ -58,9 +59,14 @@ export class MatchesComponent implements OnInit, OnDestroy {
     return map;
   });
 
-  ngOnInit() {
-    this.loadMatches();
-    this.poll = setInterval(() => this.loadMatches(true), 15000);
+  constructor() {
+    // Also covers signing up from this tab: the page loads as soon as there's an account
+    effect(() => {
+      clearInterval(this.poll);
+      if (!this.auth.currentUser()) return;
+      untracked(() => this.loadMatches());
+      this.poll = setInterval(() => this.loadMatches(true), 15000);
+    }, { allowSignalWrites: true });
   }
 
   ngOnDestroy() {

@@ -1,5 +1,10 @@
+@if (!auth.currentUser()) {
+  <app-guest-gate title="Messages" icon="chat" heading="Talk before you book"
+    text="Chat with cleaners about rooms, pets, keys and timing — no phone numbers needed."
+    [points]="['Opens when you match, or when you request a time', 'Book a slot right from the chat', 'Your contact details stay private']" />
+} @else {
 <div class="mx-auto max-w-2xl">
-  <h1 class="font-display text-3xl font-semibold">Chats</h1>
+  <h1 class="font-display text-3xl font-bold">Messages</h1>
   <p class="text-sm text-muted">Agree on the details, then book a time right from the chat.</p>
 
   @if (matches().length > 4) {
@@ -19,12 +24,12 @@
     </div>
   } @else if (matches().length === 0) {
     <div class="card mt-6 p-8 text-center">
-      <span class="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-sage-100 text-sage-700"><app-icon name="heart" [size]="26" /></span>
+      <span class="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-brand-100 text-brand-700"><app-icon name="heart" [size]="26" /></span>
       <h2 class="font-display text-2xl font-semibold">No matches yet</h2>
       <p class="mt-2 text-sm text-muted">
         When someone you liked likes you back, they'll show up here.
       </p>
-      <a routerLink="/app/discover" class="btn btn-primary mt-6">Keep discovering</a>
+      <a routerLink="/" class="btn btn-primary mt-6">Browse cleaners</a>
     </div>
   } @else {
     @if (fresh().length) {
@@ -32,8 +37,8 @@
         <p class="eyebrow mb-3">New matches · say hello</p>
         <div class="scroll-x -mx-4 flex gap-4 px-4 pb-1">
           @for (m of fresh(); track m.matchId) {
-            <a [routerLink]="['/app/chat', m.matchId]" class="flex w-16 shrink-0 flex-col items-center gap-1.5 text-center">
-              <span class="rounded-full p-0.5 ring-2 ring-sage-500">
+            <a [routerLink]="['/chat', m.matchId]" class="flex w-16 shrink-0 flex-col items-center gap-1.5 text-center">
+              <span class="rounded-full p-0.5 ring-2 ring-brand-500">
                 <app-avatar [name]="m.otherUserName" [src]="m.otherUserProfilePicture" [seed]="m.otherUserId" [size]="60" />
               </span>
               <span class="w-full truncate text-xs font-semibold">{{ m.otherUserName.split(' ')[0] }}</span>
@@ -49,7 +54,7 @@
         <ul class="space-y-2">
           @for (m of conversations(); track m.matchId) {
             <li>
-              <a [routerLink]="['/app/chat', m.matchId]" class="card flex items-center gap-3 p-3 pr-4 transition hover:shadow-[var(--shadow-lift)]">
+              <a [routerLink]="['/chat', m.matchId]" class="card flex items-center gap-3 p-3 pr-4 transition hover:shadow-[var(--shadow-lift)]">
                 <app-avatar [name]="m.otherUserName" [src]="m.otherUserProfilePicture" [seed]="m.otherUserId" [size]="52" />
                 <div class="min-w-0 flex-1">
                   <div class="flex items-baseline justify-between gap-2">
@@ -57,11 +62,11 @@
                     <span class="shrink-0 text-xs text-muted">{{ relative(m.lastMessageAt) }}</span>
                   </div>
                   <p class="truncate text-sm text-muted">
-                    @if (m.lastMessageMine) { <span class="font-semibold text-forest-800">You: </span> }{{ m.lastMessage }}
+                    @if (m.lastMessageMine) { <span class="font-semibold text-coal-800">You: </span> }{{ m.lastMessage }}
                   </p>
                   @if (nextBooking().get(m.matchId); as b) {
                     <span class="mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.7rem] font-bold"
-                      [class]="b.status === 'CONFIRMED' ? 'bg-sage-100 text-sage-700' : 'bg-butter-300/60 text-forest-900'">
+                      [class]="b.status === 'CONFIRMED' ? 'bg-brand-100 text-brand-700' : 'bg-butter-300/60 text-coal-900'">
                       <app-icon name="calendar" [size]="12" /> {{ bookingLabel(b) }}
                     </span>
                   }
@@ -81,3 +86,4 @@
     </section>
   }
 </div>
+}

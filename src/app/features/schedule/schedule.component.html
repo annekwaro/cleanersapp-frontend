@@ -1,3 +1,8 @@
+@if (!auth.currentUser()) {
+  <app-guest-gate title="Bookings" icon="calendar" heading="All your cleans in one place"
+    text="Request a time from any cleaner's profile. Once you have an account, every booking lives here."
+    [points]="['See upcoming and past cleans at a glance', 'Reschedule or cancel in two taps', 'Rate your cleaner after each visit']" />
+} @else {
 <div class="mx-auto max-w-2xl">
   <div class="flex items-end justify-between gap-3">
     <div>
@@ -26,11 +31,11 @@
       @for (d of week(); track d.date.getTime()) {
         <button type="button" (click)="pickDay(d.date)"
           class="flex flex-col items-center rounded-2xl py-2 transition"
-          [class]="isSelected(d.date) ? 'bg-forest-900 text-cream-50' : d.today ? 'bg-sage-100 text-forest-900' : 'hover:bg-cream-100'">
+          [class]="isSelected(d.date) ? 'bg-coal-900 text-cream-50' : d.today ? 'bg-brand-100 text-coal-900' : 'hover:bg-cream-100'">
           <span class="text-[0.7rem] font-semibold opacity-60">{{ d.weekday }}</span>
           <span class="font-display text-lg font-semibold">{{ d.day }}</span>
           <span class="mt-0.5 flex h-1.5 gap-0.5">
-            @if (d.confirmed) { <span class="h-1.5 w-1.5 rounded-full bg-sage-500"></span> }
+            @if (d.confirmed) { <span class="h-1.5 w-1.5 rounded-full bg-brand-500"></span> }
             @if (d.pending) { <span class="h-1.5 w-1.5 rounded-full bg-butter-500"></span> }
           </span>
         </button>
@@ -75,7 +80,7 @@
       <div class="card p-6 text-center text-sm text-clay-500">{{ store.error() }}</div>
     } @else if (groups().length === 0) {
       <div class="rounded-3xl border-2 border-dashed border-line p-8 text-center">
-        <span class="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-white text-sage-700"><app-icon name="calendar" /></span>
+        <span class="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-white text-brand-700"><app-icon name="calendar" /></span>
         @switch (selectedDay() ? 'day' : tab()) {
           @case ('day') { <p class="font-semibold">Nothing on this day</p> }
           @case ('requests') {
@@ -89,7 +94,7 @@
             <p class="mt-1 text-sm text-muted">
               {{ auth.isCleaner() ? 'Chat with your matches and offer them a time.' : 'Match with a cleaner, chat, then tap Book.' }}
             </p>
-            <a routerLink="/app/chats" class="btn btn-ghost btn-sm mt-4">Open chats</a>
+            <a routerLink="/messages" class="btn btn-ghost btn-sm mt-4">Open chats</a>
           }
           @case ('past') { <p class="font-semibold">No past jobs yet</p> }
           @case ('cancelled') { <p class="font-semibold">Nothing cancelled — nice.</p> }
@@ -122,3 +127,4 @@
     </aside>
   }
 </div>
+}

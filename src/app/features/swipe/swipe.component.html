@@ -1,33 +1,67 @@
-<div class="mx-auto max-w-md md:max-w-none md:grid md:grid-cols-[1fr_24rem] md:gap-12">
-  <section class="md:order-2">
-    <div class="mb-4 flex items-end justify-between gap-3">
-      <div>
-        <h1 class="font-display text-3xl font-semibold">Discover</h1>
-        <p class="text-sm text-muted">{{ auth.isCleaner() ? 'Homes looking for help near you' : 'Cleaners available near you' }}</p>
-      </div>
-      @if (!auth.isCleaner()) {
-        <label class="relative">
-          <span class="sr-only">Sort by</span>
-          <select class="chip chip-light appearance-none !bg-sage-600 !pr-7 !text-white" [value]="sort()" (change)="sort.set($any($event.target).value)">
-            <option value="best">Sort: Top rated</option>
-            <option value="price">Sort: Lowest price</option>
-            <option value="experience">Sort: Most experienced</option>
-          </select>
-          <app-icon name="chevron" [size]="14" class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 text-white" />
-        </label>
-      }
+<div class="mx-auto max-w-md md:max-w-none md:grid md:grid-cols-[minmax(0,1fr)_24rem] md:gap-12">
+  <!-- Day at a glance -->
+  <section class="md:pt-2">
+    <h1 class="text-[1.9rem] font-extrabold leading-tight tracking-tight">Your <span class="text-brand-600">day</span></h1>
+
+    <div class="mt-4 grid grid-cols-2 gap-3">
+      <a routerLink="/bookings" class="relative overflow-hidden rounded-[1.6rem] p-4 transition hover:-translate-y-0.5"
+        [class]="store.needsReply().length ? 'bg-brand-600 text-white' : 'bg-white shadow-[var(--shadow-card)]'">
+        <app-icon name="bell" [size]="20" />
+        <p class="mt-3 text-3xl font-extrabold">{{ store.needsReply().length }}</p>
+        <p class="text-sm" [class]="store.needsReply().length ? 'text-white/80' : 'text-muted'">
+          {{ store.needsReply().length === 1 ? 'Request to answer' : 'Requests to answer' }}
+        </p>
+      </a>
+      <a routerLink="/earnings" class="rounded-[1.6rem] bg-coal-900 p-4 text-white transition hover:-translate-y-0.5">
+        <app-icon name="wallet" [size]="20" class="text-brand-300" />
+        <p class="mt-3 text-3xl font-extrabold">{{ monthEarned() }}</p>
+        <p class="text-sm text-white/65">Earned this month</p>
+      </a>
+      <a routerLink="/bookings" class="col-span-2 flex items-center gap-4 rounded-[1.6rem] bg-white p-4 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5">
+        <span class="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-brand-100 text-brand-700"><app-icon name="calendar" [size]="22" /></span>
+        @if (next(); as n) {
+          <span class="min-w-0 flex-1">
+            <span class="block text-xs font-semibold uppercase tracking-wider text-muted">Next job</span>
+            <span class="block truncate font-bold">{{ n.day }}, {{ n.time }} · {{ n.who }}</span>
+          </span>
+        } @else {
+          <span class="min-w-0 flex-1">
+            <span class="block font-bold">No jobs booked yet</span>
+            <span class="block text-sm text-muted">Like homes below — matches can book you.</span>
+          </span>
+        }
+        <app-icon name="chevron" class="text-muted" />
+      </a>
     </div>
 
-    @if (!auth.isCleaner() && services().length > 1) {
-      <div class="scroll-x -mx-4 mb-4 flex gap-2 px-4 md:mx-0 md:px-0">
-        @for (s of services(); track s) {
-          <button type="button" class="chip chip-light shrink-0" [class.chip-on]="filter() === s" (click)="filter.set(s)">{{ s }}</button>
-        }
-      </div>
+    @if (strength() !== null && strength()! < 80) {
+      <a routerLink="/profile" class="mt-3 flex items-center gap-4 rounded-[1.6rem] bg-butter-300/60 p-4 transition hover:-translate-y-0.5">
+        <span class="relative grid h-12 w-12 shrink-0 place-items-center">
+          <svg viewBox="0 0 36 36" class="absolute inset-0 -rotate-90">
+            <circle cx="18" cy="18" r="15.5" fill="none" stroke="white" stroke-width="3.5" />
+            <circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--color-brand-600)" stroke-width="3.5" stroke-linecap="round"
+              [attr.stroke-dasharray]="(strength()! / 100) * 97.4 + ' 97.4'" />
+          </svg>
+          <span class="text-xs font-bold">{{ strength() }}%</span>
+        </span>
+        <span class="min-w-0 flex-1">
+          <span class="block font-bold">Finish your profile</span>
+          <span class="block text-sm text-coal-800/75">Complete profiles get booked far more often.</span>
+        </span>
+        <app-icon name="chevron" />
+      </a>
     }
+  </section>
+
+  <!-- Homes to swipe -->
+  <section class="mt-8 md:mt-2">
+    <div class="mb-4">
+      <h2 class="text-lg font-bold">Homes looking for help</h2>
+      <p class="text-sm text-muted">Like the ones you'd take on. It's a match when they like you too.</p>
+    </div>
 
     @if (loading()) {
-      <div class="mx-auto grid aspect-[3/4.1] w-full max-w-[24rem] place-items-center rounded-[2rem] bg-white/60">
+      <div class="mx-auto grid aspect-[3/4.1] w-full max-w-[24rem] place-items-center rounded-[2rem] bg-white/70">
         <div class="spinner"></div>
       </div>
     } @else if (error()) {
@@ -35,59 +69,20 @@
         <p class="text-clay-500">{{ error() }}</p>
         <button class="btn btn-primary mt-5" (click)="loadProfiles()"><app-icon name="refresh" [size]="18" /> Try again</button>
       </div>
-    } @else if (deck().length) {
-      <app-swipe-deck [profiles]="deck()" (swiped)="onSwipe($event)" (opened)="detail.set($event)" />
+    } @else if (profiles().length) {
+      <app-swipe-deck [profiles]="profiles()" (swiped)="onSwipe($event)" (opened)="detail.set($event)" />
     } @else {
       <div class="card mx-auto max-w-[24rem] p-8 text-center">
-        <span class="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-sage-100 text-sage-700"><app-icon name="sparkles" [size]="26" /></span>
-        <h2 class="font-display text-2xl font-semibold">
-          {{ filter() !== 'All' ? 'No one else for “' + filter() + '”' : "You've seen everyone" }}
-        </h2>
-        <p class="mt-2 text-sm text-muted">New people join every week. Meanwhile, check in on your matches.</p>
+        <span class="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-brand-100 text-brand-700"><app-icon name="sparkles" [size]="26" /></span>
+        <h2 class="text-xl font-bold">You've seen every home</h2>
+        <p class="mt-2 text-sm text-muted">New homeowners join every week. Meanwhile, check your messages.</p>
         <div class="mt-6 flex flex-col gap-2">
-          @if (filter() !== 'All') {
-            <button class="btn btn-primary" (click)="filter.set('All')">Show everyone</button>
-          } @else {
-            <a class="btn btn-primary" routerLink="/app/chats">Go to chats</a>
-          }
+          <a class="btn btn-primary" routerLink="/messages">Go to messages</a>
           <button class="btn btn-ghost" (click)="loadProfiles()"><app-icon name="refresh" [size]="18" /> Refresh</button>
         </div>
       </div>
     }
   </section>
-
-  <!-- Side column on desktop, below the deck on mobile -->
-  <aside class="mt-8 space-y-4 md:order-1 md:mt-16">
-    @if (strength() !== null && strength()! < 80) {
-      <a routerLink="/app/profile" class="card flex items-center gap-4 p-4 transition hover:shadow-[var(--shadow-lift)]">
-        <span class="relative grid h-14 w-14 shrink-0 place-items-center">
-          <svg viewBox="0 0 36 36" class="absolute inset-0 -rotate-90">
-            <circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--color-sage-100)" stroke-width="3.5" />
-            <circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--color-sage-600)" stroke-width="3.5" stroke-linecap="round"
-              [attr.stroke-dasharray]="(strength()! / 100) * 97.4 + ' 97.4'" />
-          </svg>
-          <span class="text-sm font-bold">{{ strength() }}%</span>
-        </span>
-        <span class="min-w-0 flex-1">
-          <span class="block font-semibold">Finish your profile</span>
-          <span class="block text-sm text-muted">
-            {{ auth.isCleaner() ? 'Complete profiles get liked back far more often.' : 'Cleaners decide faster when they know what you need.' }}
-          </span>
-        </span>
-        <app-icon name="chevron" class="text-muted" />
-      </a>
-    }
-
-    <div class="hidden rounded-3xl bg-white/60 p-5 md:block">
-      <p class="eyebrow mb-3">How it works</p>
-      <ul class="space-y-3 text-sm">
-        <li class="flex gap-3"><app-icon name="heart" class="text-sage-600" />Drag right or press → to like</li>
-        <li class="flex gap-3"><app-icon name="x" class="text-clay-500" />Drag left or press ← to pass</li>
-        <li class="flex gap-3"><app-icon name="info" class="text-forest-800" />Tap a card for the full profile</li>
-        <li class="flex gap-3"><app-icon name="chat" class="text-forest-800" />When it's mutual, chat and book</li>
-      </ul>
-    </div>
-  </aside>
 </div>
 
 @if (detail(); as p) {

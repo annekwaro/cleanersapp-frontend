@@ -1,10 +1,9 @@
 import { Routes } from '@angular/router';
 import { authGuard, cleanerGuard, guestGuard } from './core/guards';
-import { LandingComponent } from './features/landing/landing.component';
 import { LoginComponent } from './features/auth/login/login.component';
 import { RegisterComponent } from './features/auth/register/register.component';
 import { ShellComponent } from './features/shell/shell.component';
-import { SwipeComponent } from './features/swipe/swipe.component';
+import { HomeComponent } from './features/home/home.component';
 import { MatchesComponent } from './features/matches/matches.component';
 import { ChatComponent } from './features/chat/chat.component';
 import { ScheduleComponent } from './features/schedule/schedule.component';
@@ -12,30 +11,34 @@ import { EarningsComponent } from './features/earnings/earnings.component';
 import { ProfileComponent } from './features/profile/profile.component';
 
 export const routes: Routes = [
-  // Public: browse first, sign up later
-  { path: '', component: LandingComponent, canActivate: [guestGuard], title: 'CleanMatch — find a cleaner you click with' },
   { path: 'login', component: LoginComponent, canActivate: [guestGuard], title: 'Log in · CleanMatch' },
   { path: 'register', component: RegisterComponent, canActivate: [guestGuard], title: 'Sign up · CleanMatch' },
 
   // Chat is full-screen, outside the tab shell
-  { path: 'app/chat/:matchId', component: ChatComponent, canActivate: [authGuard], title: 'Chat · CleanMatch' },
+  { path: 'chat/:matchId', component: ChatComponent, canActivate: [authGuard], title: 'Chat · CleanMatch' },
+
+  // Old URLs
+  { path: 'app', redirectTo: '', pathMatch: 'full' },
+  { path: 'app/discover', redirectTo: '' },
+  { path: 'app/chats', redirectTo: 'messages' },
+  { path: 'app/schedule', redirectTo: 'bookings' },
+  { path: 'app/earnings', redirectTo: 'earnings' },
+  { path: 'app/profile', redirectTo: 'profile' },
+  { path: 'app/chat/:matchId', redirectTo: 'chat/:matchId' },
+  { path: 'swipe', redirectTo: '' },
+  { path: 'matches', redirectTo: 'messages' },
+
+  // Three tabs — open to everyone; guests get a sign-up prompt where an account is needed
   {
-    path: 'app',
+    path: '',
     component: ShellComponent,
-    canActivate: [authGuard],
     children: [
-      { path: '', redirectTo: 'discover', pathMatch: 'full' },
-      { path: 'discover', component: SwipeComponent, title: 'Discover · CleanMatch' },
-      { path: 'chats', component: MatchesComponent, title: 'Chats · CleanMatch' },
-      { path: 'schedule', component: ScheduleComponent, title: 'Schedule · CleanMatch' },
-      { path: 'earnings', component: EarningsComponent, canActivate: [cleanerGuard], title: 'Earnings · CleanMatch' },
-      { path: 'profile', component: ProfileComponent, title: 'Profile · CleanMatch' },
+      { path: '', component: HomeComponent, title: 'CleanMatch — find a cleaner you\'ll love' },
+      { path: 'bookings', component: ScheduleComponent, title: 'Bookings · CleanMatch' },
+      { path: 'messages', component: MatchesComponent, title: 'Messages · CleanMatch' },
+      { path: 'earnings', component: EarningsComponent, canActivate: [authGuard, cleanerGuard], title: 'Earnings · CleanMatch' },
+      { path: 'profile', component: ProfileComponent, canActivate: [authGuard], title: 'Profile · CleanMatch' },
     ],
   },
-
-  // Old URLs from the first version
-  { path: 'swipe', redirectTo: 'app/discover' },
-  { path: 'matches', redirectTo: 'app/chats' },
-  { path: 'chat/:matchId', redirectTo: 'app/chat/:matchId' },
   { path: '**', redirectTo: '' },
 ];

@@ -4,6 +4,8 @@ import { Observable, map } from 'rxjs';
 import {
   Booking,
   BookingDraft,
+  DirectRequestDraft,
+  DirectRequestResult,
   Match,
   Message,
   Profile,
@@ -82,6 +84,10 @@ export class ApiService {
     return this.http.post<Booking>(`${this.API_URL}/bookings`, draft);
   }
 
+  createDirectRequest(draft: DirectRequestDraft): Observable<DirectRequestResult> {
+    return this.http.post<DirectRequestResult>(`${this.API_URL}/bookings/direct`, draft);
+  }
+
   confirmBooking(id: number): Observable<Booking> {
     return this.http.post<Booking>(`${this.API_URL}/bookings/${id}/confirm`, {});
   }
@@ -109,13 +115,14 @@ function normalizeMessage(m: any): Message {
 }
 
 // Older backend builds don't send the structured fields yet.
-function normalizeProfile(p: any): Profile {
+export function normalizeProfile(p: any): Profile {
   return {
     ...p,
     services: p.services ?? [],
     languages: p.languages ?? [],
     availableDays: p.availableDays ?? [],
     completedJobs: p.completedJobs ?? 0,
+    acceptsDirectRequests: p.acceptsDirectRequests ?? false,
     profilePicture: p.profilePicture || null,
     bio: p.bio || null,
   };

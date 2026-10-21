@@ -10,10 +10,10 @@ export const authGuard: CanActivateFn = () => {
 /** Landing and auth pages: signed-in users go straight to the app. */
 export const guestGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
-  return !auth.isLoggedIn() || inject(Router).createUrlTree(['/app/discover']);
+  return !auth.isLoggedIn() || inject(Router).createUrlTree(['/']);
 };
 
 export const cleanerGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
-  return auth.isCleaner() || inject(Router).createUrlTree(['/app/discover']);
+  return auth.isCleaner() || inject(Router).createUrlTree(['/']);
 };

@@ -9,7 +9,9 @@
       {{ role() === 'CLEANER' ? 'Start getting booked' : 'Create your account' }}
     </h1>
     <p class="mt-2 text-muted">
-      @if (role() === 'HOMEOWNER' && guestLikes.likes().length) {
+      @if (role() === 'HOMEOWNER' && guestRequest.pending(); as pr) {
+        Your request to {{ pr.cleanerName.split(' ')[0] }} will be sent as soon as you're in.
+      } @else if (role() === 'HOMEOWNER' && guestLikes.likes().length) {
         Your {{ guestLikes.likes().length }} like{{ guestLikes.likes().length > 1 ? 's' : '' }} will be sent as soon as you're in.
       } @else if (role() === 'CLEANER') {
         Three fields now. You'll polish your profile next.
@@ -25,9 +27,9 @@
       ]; track opt.value) {
         <button type="button" role="radio" [attr.aria-checked]="role() === opt.value" (click)="role.set($any(opt.value))"
           class="rounded-3xl border-2 p-4 text-left transition"
-          [class]="role() === opt.value ? 'border-sage-600 bg-white shadow-[var(--shadow-card)]' : 'border-transparent bg-white/60'">
+          [class]="role() === opt.value ? 'border-brand-600 bg-white shadow-[var(--shadow-card)]' : 'border-transparent bg-white/60'">
           <span class="grid h-10 w-10 place-items-center rounded-2xl"
-            [class]="role() === opt.value ? 'bg-sage-600 text-white' : 'bg-cream-100 text-forest-800'">
+            [class]="role() === opt.value ? 'bg-brand-600 text-white' : 'bg-cream-100 text-coal-800'">
             <app-icon [name]="opt.icon" />
           </span>
           <p class="mt-3 font-semibold leading-tight">{{ opt.title }}</p>

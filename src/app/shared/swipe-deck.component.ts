@@ -42,7 +42,7 @@ const FLING_MS = 280;
           (pointercancel)="i === 0 && reset()">
           <app-profile-card [profile]="p" />
           @if (i === 0) {
-            <span class="pointer-events-none absolute left-5 top-16 -rotate-12 rounded-xl border-4 border-sage-300 px-3 py-1 font-display text-3xl font-bold text-sage-300"
+            <span class="pointer-events-none absolute left-5 top-16 -rotate-12 rounded-xl border-4 border-brand-300 px-3 py-1 font-display text-3xl font-bold text-brand-300"
               [style.opacity]="likeOpacity()">LIKE</span>
             <span class="pointer-events-none absolute right-5 top-16 rotate-12 rounded-xl border-4 border-clay-100 px-3 py-1 font-display text-3xl font-bold text-clay-100"
               [style.opacity]="passOpacity()">PASS</span>
@@ -52,17 +52,23 @@ const FLING_MS = 280;
     </div>
 
     @if (visible().length) {
-      <div class="mt-6 flex items-center justify-center gap-5">
+      <div class="mt-6 flex items-center justify-center gap-4">
         <button type="button" (click)="fling('PASS')" aria-label="Pass"
           class="grid h-16 w-16 place-items-center rounded-full bg-white text-clay-500 shadow-[var(--shadow-card)] transition hover:scale-105 active:scale-95">
           <app-icon name="x" [size]="28" [stroke]="2.6" />
         </button>
         <button type="button" (click)="opened.emit(visible()[0])" aria-label="See details"
-          class="grid h-12 w-12 place-items-center rounded-full bg-white text-forest-800 shadow-[var(--shadow-card)] transition hover:scale-105 active:scale-95">
+          class="grid h-12 w-12 place-items-center rounded-full bg-white text-coal-800 shadow-[var(--shadow-card)] transition hover:scale-105 active:scale-95">
           <app-icon name="info" [size]="20" />
         </button>
+        @if (requestable() && visible()[0].acceptsDirectRequests) {
+          <button type="button" (click)="request.emit(visible()[0])" [attr.aria-label]="'Request a clean from ' + visible()[0].name"
+            class="grid h-12 w-12 place-items-center rounded-full bg-butter-300 text-coal-900 shadow-[var(--shadow-card)] transition hover:scale-105 active:scale-95">
+            <app-icon name="calendar-plus" [size]="20" />
+          </button>
+        }
         <button type="button" (click)="fling('LIKE')" aria-label="Like"
-          class="grid h-16 w-16 place-items-center rounded-full bg-sage-600 text-white shadow-[0_10px_24px_-8px_rgb(59_138_90/.7)] transition hover:scale-105 active:scale-95">
+          class="grid h-16 w-16 place-items-center rounded-full bg-brand-600 text-white shadow-[0_10px_24px_-8px_rgb(124_92_224/.7)] transition hover:scale-105 active:scale-95">
           <app-icon name="heart" [size]="28" [filled]="true" />
         </button>
       </div>
@@ -72,6 +78,9 @@ export class SwipeDeckComponent {
   profiles = input.required<Profile[]>();
   swiped = output<{ profile: Profile; direction: SwipeDirection }>();
   opened = output<Profile>();
+  /** Show a "request a clean" button on cards whose cleaner takes direct requests. */
+  requestable = input(false);
+  request = output<Profile>();
 
   visible = computed(() => this.profiles().slice(0, 3));
 

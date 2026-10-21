@@ -1,9 +1,8 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { GuestLikesService } from '../../../core/services/guest-likes.service';
-import { ToastService } from '../../../core/services/toast.service';
+import { PostAuthService } from '../../../core/services/post-auth.service';
 import { LogoComponent } from '../../../shared/logo.component';
 import { IconComponent } from '../../../shared/icon.component';
 
@@ -16,9 +15,7 @@ import { IconComponent } from '../../../shared/icon.component';
 })
 export class LoginComponent {
   private auth = inject(AuthService);
-  private router = inject(Router);
-  private guestLikes = inject(GuestLikesService);
-  private toast = inject(ToastService);
+  private postAuth = inject(PostAuthService);
 
   email = '';
   password = '';
@@ -32,10 +29,7 @@ export class LoginComponent {
     this.auth.login({ email: this.email.trim(), password: this.password }).subscribe({
       next: () => {
         this.loading.set(false);
-        this.guestLikes.flush().subscribe((matched) => {
-          if (matched.length) this.toast.show(`It's a match with ${matched.join(', ')}!`);
-        });
-        this.router.navigate(['/app/discover']);
+        this.postAuth.continue(false);
       },
       error: (err) => {
         this.loading.set(false);

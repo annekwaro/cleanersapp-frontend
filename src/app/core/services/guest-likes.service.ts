@@ -27,6 +27,11 @@ export class GuestLikesService {
     this.save();
   }
 
+  clear() {
+    this.likes.set([]);
+    this.save();
+  }
+
   /** Sends pending likes; emits the names of any that turned into matches. */
   flush(): Observable<string[]> {
     const pending = this.likes();

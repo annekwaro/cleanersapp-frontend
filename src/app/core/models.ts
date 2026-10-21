@@ -23,10 +23,26 @@ export interface Profile {
   yearsExperience: number | null;
   bringsSupplies: boolean | null;
   petFriendly: boolean | null;
+  acceptsDirectRequests: boolean;
   completedJobs: number;
 }
 
 export type ProfileUpdate = Partial<Omit<Profile, 'id' | 'email' | 'role' | 'rating' | 'completedJobs'>>;
+
+/** Homeowner asking a cleaner for a slot straight from their profile. */
+export interface DirectRequestDraft {
+  cleanerId: number;
+  startAt: string; // local wall time, "YYYY-MM-DDTHH:mm:00"
+  durationHours: number;
+  address?: string;
+  notes?: string;
+  message?: string;
+}
+
+export interface DirectRequestResult {
+  matchId: number;
+  booking: Booking;
+}
 
 export interface SwipeResult {
   matched: boolean;

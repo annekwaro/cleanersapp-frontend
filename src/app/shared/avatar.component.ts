@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 import { initials } from '../core/format';
 
-export const SWATCHES = ['#3b8a5a', '#c9a23a', '#285039', '#7d9c6b', '#b8744f'];
+export const SWATCHES = ['#7c5ce0', '#f5a524', '#2f9e8f', '#d0577a', '#3b82f6', '#3a3550'];
 
 export function swatchFor(seed: number | string): string {
   const n = typeof seed === 'number' ? seed : [...seed].reduce((a, c) => a + c.charCodeAt(0), 0);
