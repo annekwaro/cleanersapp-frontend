@@ -1,27 +1,66 @@
-# CleanersappFrontend
+# CleanMatch — frontend
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.1.1.
+**CleanMatch** connects homeowners with independent cleaners. You swipe through profiles,
+a mutual like opens a chat, and you book a cleaning slot that the other side confirms.
 
-## Development server
+This repository is the Angular web app. The REST API lives in
+[cleanersapp-backend](https://github.com/annekwaro/cleanersapp-backend) (Spring Boot, JWT,
+PostgreSQL).
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+<!-- Live demo: add the Vercel link here -->
 
-## Code scaffolding
+## Tech stack
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+Angular 17 (standalone components, signals, functional guards and interceptors) ·
+TypeScript · Tailwind CSS 4 · deployed on Vercel, with the API on Render
 
-## Build
+## Features
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+- **Browse without an account.** First-time visitors see a one-screen welcome, then the
+  swipe deck. Their likes are kept in the browser and sent to the API as soon as they sign
+  up or log in, so nothing is lost. Screens that need an account show a sign-up prompt instead of blocking the visitor.
+- **Swipe and match.** Homeowners see cleaners and cleaners see homeowners. A mutual like
+  shows a "match" screen and opens a conversation.
+- **Chat.** A full-screen conversation view for each match.
+- **Bookings.** Propose a date, duration, address and notes; the other person confirms or
+  declines. Bookings can then be cancelled, completed by the cleaner and rated by the
+  homeowner. The buttons shown come from flags the API sends (`canRespond`, `canCancel`,
+  `canComplete`, `canRate`), so the screen always matches the server's rules.
+- **Direct requests.** Homeowners can request a cleaner straight from their profile when
+  the cleaner allows it, without waiting for a match.
+- **Earnings tab for cleaners**, only reachable with the cleaner role (route guard).
+- **Profile strength.** A weighted checklist shows users which details make their profile
+  more likely to be matched; the checks differ for cleaners and homeowners.
+- **Fast first load.** At build time, a script saves the public cleaner list into the app.
+  The landing page can show profiles immediately while the free-tier backend on Render is
+  still waking up, and the build still succeeds if the backend doesn't answer.
 
-## Running unit tests
+## Project structure
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+```
+src/app/
+├── core/       API service, auth service and JWT interceptor, route guards,
+│               booking store, models and formatting helpers
+├── features/   one folder per screen: auth, home and swipe, messages, chat,
+│               bookings (schedule), earnings, profile
+└── shared/     reusable UI: swipe deck, profile card, booking sheet, match modal…
+```
 
-## Running end-to-end tests
+Routes use guards for three cases: guests only (login and sign-up pages), logged-in users,
+and cleaners only. The JWT is added to API requests by an HTTP interceptor.
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+## Run it locally
 
-## Further help
+Requires Node.js 18.13+ or 20.
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+```bash
+npm install
+npm start          # http://localhost:4200
+```
+
+The app talks to the deployed API (`src/app/core/services/api.service.ts`). To use a local
+backend, change `API_URL` to `http://localhost:8080/api`.
+
+```bash
+npm run build      # saves the cleaner snapshot, then builds to dist/
+```
