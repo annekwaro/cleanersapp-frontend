@@ -27,7 +27,14 @@ const FLING_MS = 280;
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
+    <!-- The tinted cards may bleed off a phone screen; clip them there rather than scroll sideways -->
+    <div class="-mx-4 overflow-x-clip px-4 sm:mx-0 sm:px-0">
     <div class="relative mx-auto aspect-[3/4.1] w-full max-w-[24rem] max-h-[max(22rem,min(calc(100dvh-24rem),560px))]">
+      @if (visible().length) {
+        <!-- Tinted cards fanned out behind the stack -->
+        <div aria-hidden="true" class="absolute inset-0 translate-x-3 translate-y-3 scale-[.94] rotate-[9deg] rounded-[2rem] bg-butter-500"></div>
+        <div aria-hidden="true" class="absolute inset-0 -translate-x-3 translate-y-2 scale-[.95] -rotate-[7deg] rounded-[2rem] bg-brand-500"></div>
+      }
       @for (p of visible(); track p.id; let i = $index) {
         <div class="absolute inset-0 will-change-transform"
           [style.zIndex]="10 - i"
@@ -49,6 +56,7 @@ const FLING_MS = 280;
           }
         </div>
       }
+    </div>
     </div>
 
     @if (visible().length) {

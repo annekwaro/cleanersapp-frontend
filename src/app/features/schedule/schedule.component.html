@@ -6,7 +6,7 @@
 <div class="mx-auto max-w-2xl">
   <div class="flex items-end justify-between gap-3">
     <div>
-      <h1 class="font-display text-3xl font-semibold">{{ auth.isCleaner() ? 'Schedule' : 'Bookings' }}</h1>
+      <h1 class="font-display text-3xl font-bold">{{ auth.isCleaner() ? 'Schedule' : 'Bookings' }}</h1>
       <p class="text-sm text-muted">
         {{ auth.isCleaner() ? 'Accept requests, keep track of jobs, cancel if you must.' : 'Your cleans, past and upcoming.' }}
       </p>
@@ -57,15 +57,16 @@
       <button class="chip chip-light" (click)="selectedDay.set(null)"><app-icon name="x" [size]="14" /> Clear</button>
     </div>
   } @else {
-    <div class="scroll-x -mx-4 mt-6 flex gap-2 px-4" role="tablist">
+    <div class="mt-6 flex gap-1 rounded-full bg-white p-1 shadow-[var(--shadow-card)]" role="tablist">
       @for (t of tabs(); track t.id) {
-        <button type="button" role="tab" [attr.aria-selected]="tab() === t.id" class="chip chip-light shrink-0 !py-2"
-          [class.chip-on]="tab() === t.id" (click)="pickTab(t.id)">
-          {{ t.label }}
+        <button type="button" role="tab" [attr.aria-selected]="tab() === t.id"
+          class="flex min-w-0 flex-auto items-center justify-center gap-1 rounded-full px-2 py-2 text-[0.8rem] font-semibold transition"
+          [class]="tab() === t.id ? 'bg-brand-600 text-white' : 'text-coal-800 hover:bg-cream-100'" (click)="pickTab(t.id)">
+          <span class="truncate">{{ t.label }}</span>
           @if (t.alert) {
-            <span class="grid h-5 min-w-5 place-items-center rounded-full bg-clay-500 px-1 text-[0.7rem] text-white">{{ t.alert }}</span>
+            <span class="grid h-[1.1rem] min-w-[1.1rem] shrink-0 place-items-center rounded-full bg-clay-500 px-1 text-[0.65rem] text-white">{{ t.alert }}</span>
           } @else if (t.count) {
-            <span class="opacity-60">{{ t.count }}</span>
+            <span class="shrink-0 opacity-60">{{ t.count }}</span>
           }
         </button>
       }

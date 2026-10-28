@@ -3,13 +3,14 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { PostAuthService } from '../../../core/services/post-auth.service';
+import { CardFanComponent } from '../../../shared/card-fan.component';
 import { LogoComponent } from '../../../shared/logo.component';
 import { IconComponent } from '../../../shared/icon.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule, RouterLink, LogoComponent, IconComponent],
+  imports: [FormsModule, RouterLink, LogoComponent, IconComponent, CardFanComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })

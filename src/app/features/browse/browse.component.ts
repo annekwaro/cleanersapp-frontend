@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, signal, untracked } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Profile, SERVICES } from '../../core/models';
+import { Profile } from '../../core/models';
 import { money } from '../../core/format';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -23,8 +23,23 @@ type Mode = 'browse' | 'swipe';
 
 interface Category {
   name: string;
+  label: string;
   icon: string;
 }
+
+/** The few services the Home filters start from; what cleaners actually offer comes first. */
+const CORE_SERVICES = ['Regular clean', 'Deep clean', 'Move in / out', 'Laundry & ironing'];
+const MAX_CATEGORIES = 4;
+
+/** Short names so the filter row fits a phone without scrolling. */
+const SHORT_LABELS: Record<string, string> = {
+  'Regular clean': 'Regular',
+  'Deep clean': 'Deep',
+  'Move in / out': 'Move out',
+  'End of tenancy': 'Tenancy',
+  'Laundry & ironing': 'Laundry',
+  'After a party': 'Party',
+};
 
 /** Icon for a service name, by keyword; anything unknown gets sparkles. */
 const SERVICE_ICONS: [RegExp, string][] = [
@@ -63,6 +78,7 @@ const MODE_KEY = 'cleanmatch_browse_mode';
 })
 export class BrowseComponent implements OnInit {
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private api = inject(ApiService);
   private toast = inject(ToastService);
   private prompts = inject(AuthPromptService);
@@ -97,8 +113,11 @@ export class BrowseComponent implements OnInit {
     this.all().forEach((p) => p.services.forEach((s) => counts.set(s, (counts.get(s) ?? 0) + 1)));
     // Most offered first, topped up from the standard list so the row is never empty
     const offered = [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([s]) => s);
-    const top = [...new Set([...offered, ...SERVICES])].slice(0, 7);
-    return [{ name: 'All', icon: 'grid' }, ...top.map((name) => ({ name, icon: this.iconFor(name) }))];
+    const top = [...new Set([...offered, ...CORE_SERVICES])].slice(0, MAX_CATEGORIES);
+    return [
+      { name: 'All', label: 'All', icon: 'grid' },
+      ...top.map((name) => ({ name, label: SHORT_LABELS[name] ?? name, icon: this.iconFor(name) })),
+    ];
   });
 
   /** Search + category, best first. */
@@ -128,6 +147,19 @@ export class BrowseComponent implements OnInit {
     );
   });
   deckLoading = computed(() => (this.signedIn() ? this.unswiped() === null : this.loading()));
+
+  constructor() {
+    // A shared link (/?cleaner=12) opens that cleaner once the list is in
+    const shared = Number(this.route.snapshot.queryParamMap.get('cleaner'));
+    if (shared) {
+      const stop = effect(() => {
+        const p = this.all().find((c) => c.id === shared);
+        if (!p) return;
+        untracked(() => this.detail.set(p));
+        stop.destroy();
+      }, { allowSignalWrites: true });
+    }
+  }
 
   ngOnInit() {
     this.publicCleaners.load();
@@ -190,6 +222,39 @@ export class BrowseComponent implements OnInit {
     if (!p) return;
     if (this.mode() === 'swipe') this.onSwipe({ profile: p, direction });
     else if (direction === 'LIKE') this.like(p);
+  }
+
+  // ----- messages -----
+
+  /** Chat needs a match (or a request, which opens one); say so rather than fail. */
+  messageFrom(p: Profile) {
+    const first = this.first(p);
+    if (!this.signedIn()) {
+      this.detail.set(null);
+      this.prompts.open({
+        heading: `Message ${first}`,
+        subheading: `Create a free account, then like ${first} or send a booking request — either one opens a chat.`,
+        cta: 'Create account',
+        icon: 'chat',
+      });
+      return;
+    }
+    this.api.getMatches().subscribe({
+      next: (matches) => {
+        const m = matches.find((x) => x.otherUserId === p.id);
+        if (m) {
+          this.detail.set(null);
+          this.router.navigate(['/chat', m.matchId]);
+        } else {
+          this.toast.show(
+            p.acceptsDirectRequests
+              ? `Book ${first} to open a chat — or like them and chat when it's a match`
+              : `Like ${first} — you can chat as soon as it's a match`
+          );
+        }
+      },
+      error: (err) => this.toast.error(err, "Couldn't open messages — try again"),
+    });
   }
 
   // ----- requests -----
